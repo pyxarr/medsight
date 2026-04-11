@@ -1,9 +1,9 @@
 import "../../global.css";
+import { View } from "react-native";
 import { Stack } from "expo-router";
 import { PortalHost } from "@rn-primitives/portal";
-import { DevSitemapFab } from "@/components/DevSitemapFab";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { View } from "react-native";
+import { DevSitemapFab } from "@/components/DevSitemapFab";
 
 export default function RootLayout() {
   return (
