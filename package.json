@@ -11,6 +11,11 @@
     "lint": "expo lint"
   },
   "dependencies": {
+    "@iconify-json/codicon": "^1.2.52",
+    "@iconify-json/iconamoon": "^1.2.2",
+    "@iconify-json/iconoir": "^1.2.11",
+    "@iconify-json/ix": "^1.2.11",
+    "@iconify-json/mdi": "^1.2.3",
     "@react-navigation/bottom-tabs": "^7.15.5",
     "@react-navigation/elements": "^2.9.10",
     "@react-navigation/native": "^7.1.33",
@@ -41,6 +46,7 @@
     "react-dom": "19.2.0",
     "react-native": "0.83.6",
     "react-native-gesture-handler": "~2.30.0",
+    "react-native-iconify": "^2.0.3",
     "react-native-reanimated": "4.2.1",
     "react-native-safe-area-context": "~5.6.2",
     "react-native-screens": "~4.23.0",
