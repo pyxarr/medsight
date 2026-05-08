@@ -1,17 +1,36 @@
 import React, { useRef, useState } from "react";
-import { View, Text, Image, ScrollView } from "react-native";
+import { View, Text, Image, ScrollView, ActivityIndicator } from "react-native";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, Controller } from "react-hook-form";
+
 import { AuthShell } from "@/components/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const ClinicianPassword = () => {
-  const scrollRef = useRef<ScrollView>(null);
-  const [showPassword] = useState(false);
-  const [showConfirm] = useState(false);
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
+import { signUpClinician } from "@/lib/auth";
+import { passwordSchema } from "@/lib/validations/auth";
+import type { PasswordFormData } from "@/types/auth";
 
-  const passwordMismatch = confirm.length > 0 && password !== confirm;
+const ClinicianPassword = () => {
+  const router = useRouter();
+  const params = useLocalSearchParams<{ firstName: string; lastName: string; email: string }>();
+  const scrollRef = useRef<ScrollView>(null);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<PasswordFormData>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
   const positions = useRef({
     password: 0,
@@ -23,6 +42,30 @@ const ClinicianPassword = () => {
       y: positions.current[key] - 120,
       animated: true,
     });
+  };
+
+  const onSubmit = async (data: PasswordFormData) => {
+    setIsLoading(true);
+    setFormError(null);
+
+    try {
+      const { error } = await signUpClinician({
+        email: params.email,
+        password: data.password,
+        firstName: params.firstName,
+        lastName: params.lastName,
+      });
+
+      if (error) {
+        setFormError(error.message);
+      } else {
+        router.push(`/(auth)/clinician/otp?flow=signup&email=${encodeURIComponent(params.email)}`);
+      }
+    } catch {
+      setFormError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -55,13 +98,22 @@ const ClinicianPassword = () => {
             className="gap-2"
           >
             <Text className="text-sm text-gray-600 font-medium">Password</Text>
-            <Input
-              onFocus={() => scrollTo("password")}
-              placeholder="Password"
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={setPassword}
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  onFocus={() => scrollTo("password")}
+                  placeholder="Password"
+                  secureTextEntry
+                  value={value}
+                  onChangeText={onChange}
+                />
+              )}
             />
+            {errors.password && (
+              <Text className="text-xs text-red-500">{errors.password.message}</Text>
+            )}
           </View>
 
           <View
@@ -73,25 +125,41 @@ const ClinicianPassword = () => {
             <Text className="text-sm text-gray-600 font-medium">
               Confirm password
             </Text>
-            <Input
-              onFocus={() => scrollTo("confirm")}
-              placeholder="Confirm password"
-              secureTextEntry={!showConfirm}
-              value={confirm}
-              onChangeText={setConfirm}
-              className={passwordMismatch ? "border-red-500" : ""}
+            <Controller
+              control={control}
+              name="confirmPassword"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  onFocus={() => scrollTo("confirm")}
+                  placeholder="Confirm password"
+                  secureTextEntry
+                  value={value}
+                  onChangeText={onChange}
+                  className={errors.confirmPassword ? "border-red-500" : ""}
+                />
+              )}
             />
-            {passwordMismatch && (
-              <Text className="text-red-500 text-sm">
-                Password doesn&apos;t match
-              </Text>
+            {errors.confirmPassword && (
+              <Text className="text-xs text-red-500">{errors.confirmPassword.message}</Text>
             )}
           </View>
         </View>
 
+        {formError && (
+          <Text className="text-red-500 text-sm text-center">{formError}</Text>
+        )}
+
         {/* Sign Up Button */}
-        <Button className="bg-[#2563EB] rounded-2xl h-14 w-full mt-4">
-          <Text className="text-white font-medium text-xl">Sign up</Text>
+        <Button
+          className="bg-[#2563EB] rounded-2xl h-14 w-full mt-4"
+          onPress={handleSubmit(onSubmit)}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text className="text-white font-medium text-xl">Sign up</Text>
+          )}
         </Button>
 
         {/* Footer */}

@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@hookform/resolvers':
+        specifier: ^5.2.2
+        version: 5.2.2(react-hook-form@7.75.0(react@19.2.0))
       '@iconify-json/codicon':
         specifier: ^1.2.52
         version: 1.2.52
@@ -23,6 +26,9 @@ importers:
       '@iconify-json/mdi':
         specifier: ^1.2.3
         version: 1.2.3
+      '@react-native-async-storage/async-storage':
+        specifier: ^3.0.2
+        version: 3.0.2(react-native@0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
       '@react-navigation/bottom-tabs':
         specifier: ^7.15.5
         version: 7.15.9(@react-navigation/native@7.2.2(react-native@0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native-safe-area-context@5.6.2(react-native@0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native-screens@4.23.0(react-native@0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native@0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
@@ -47,6 +53,12 @@ importers:
       '@rn-primitives/slot':
         specifier: ^1.2.0
         version: 1.4.0(react-native-web@0.21.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-native@0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
+      '@supabase/supabase-js':
+        specifier: ^2.105.3
+        version: 2.105.3
+      '@tanstack/react-query':
+        specifier: ^5.100.9
+        version: 5.100.9(react@19.2.0)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -80,6 +92,9 @@ importers:
       expo-router:
         specifier: ~55.0.13
         version: 55.0.13(@expo/log-box@55.0.11)(@expo/metro-runtime@55.0.9)(@types/react@19.2.14)(expo-constants@55.0.15)(expo-font@55.0.6)(expo-linking@55.0.14)(expo@55.0.17)(react-dom@19.2.0(react@19.2.0))(react-native-gesture-handler@2.30.1(react-native@0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native-reanimated@4.2.1(react-native-worklets@0.7.4(@babel/core@7.29.0)(react-native@0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native@0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native-safe-area-context@5.6.2(react-native@0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native-screens@4.23.0(react-native@0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native-web@0.21.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-native@0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
+      expo-secure-store:
+        specifier: ^55.0.13
+        version: 55.0.13(expo@55.0.17)
       expo-splash-screen:
         specifier: ~55.0.19
         version: 55.0.19(expo@55.0.17)(typescript@5.9.3)
@@ -107,6 +122,9 @@ importers:
       react-dom:
         specifier: 19.2.0
         version: 19.2.0(react@19.2.0)
+      react-hook-form:
+        specifier: ^7.75.0
+        version: 7.75.0(react@19.2.0)
       react-native:
         specifier: 0.83.6
         version: 0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)
@@ -140,6 +158,12 @@ importers:
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@3.4.19(yaml@2.8.3))
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+      zustand:
+        specifier: ^5.0.13
+        version: 5.0.13(@types/react@19.2.14)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
     devDependencies:
       '@types/react':
         specifier: ~19.2.2
@@ -943,6 +967,11 @@ packages:
     resolution: {integrity: sha512-wC562eD3gS6vO2tWHToFhlFnmHKfKHgF1oyvojeSkLK/ZYop1bMU+7cOMiF9Sq70CzcsLy/EMRy/uRc76QmNRw==}
     hasBin: true
 
+  '@hookform/resolvers@5.2.2':
+    resolution: {integrity: sha512-A/IxlMLShx3KjV/HeTcTfaMxdwy690+L/ZADoeaTltLx+CVuzkeVIPuybK3jrRfw7YZnmdKsVVHAlEPIAEUNlA==}
+    peerDependencies:
+      react-hook-form: ^7.55.0
+
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
     engines: {node: '>=18.18.0'}
@@ -1347,6 +1376,12 @@ packages:
       '@types/react':
         optional: true
 
+  '@react-native-async-storage/async-storage@3.0.2':
+    resolution: {integrity: sha512-XP0zDIl+1XoeuQ7f878qXKdl77zLwzLALPpxvNRc7ZtDh9ew36WSvOdQOhFkexMySapFAWxEbZxS8K8J2DU4eg==}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+
   '@react-native/assets-registry@0.83.6':
     resolution: {integrity: sha512-iljb4ue1yWJ3EhySz7EjV6CzSVrI2uNtR8BI2jzP5+QS5E4Cl3fdIJRmVwDEx1pu8uE97PGEusGRHnoaZ9Q3jg==}
     engines: {node: '>= 20.19.4'}
@@ -1573,6 +1608,36 @@ packages:
   '@sinonjs/fake-timers@10.3.0':
     resolution: {integrity: sha512-V4BG07kuYSUkTCSBHG8G8TNhM+F19jXFWnQtzj+we8DrkpSBCee9Z3Ms8yiGer/dlmhe35/Xdgyo3/0rQKg7YA==}
 
+  '@standard-schema/utils@0.3.0':
+    resolution: {integrity: sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==}
+
+  '@supabase/auth-js@2.105.3':
+    resolution: {integrity: sha512-hMFuzP++mjRfe0/BUq4/e82CXIDgyjUgg0khLN8waol/gzoM1t2iGmhfJSGvQHQ1dr3XqWpP6ThAw4bLHMot5Q==}
+    engines: {node: '>=20.0.0'}
+
+  '@supabase/functions-js@2.105.3':
+    resolution: {integrity: sha512-KyutUwLLUZ9fRXsiFACL6lq7akBVHFl0fnqQnrxjbsPco8jeb4EyirQuvr52QCLnikzjMRC0uxAHOSM54aDrZA==}
+    engines: {node: '>=20.0.0'}
+
+  '@supabase/phoenix@0.4.1':
+    resolution: {integrity: sha512-hWGJkDAfWUNY8k0C080u3sGNFd2ncl9erhKgP7hnGkgJWEfT5Pd/SXal4QmWXBECVlZrannMAc9sBaaRyWpiUA==}
+
+  '@supabase/postgrest-js@2.105.3':
+    resolution: {integrity: sha512-jFVYRHcri0ZMcTzKpQ2r2wWOB8/rPsbj92kxmCmVJUiRrdgiMtuYlkS06Fhs8UJZhEOL0UpGhh06XDwh8JwtBQ==}
+    engines: {node: '>=20.0.0'}
+
+  '@supabase/realtime-js@2.105.3':
+    resolution: {integrity: sha512-L+qPiJlq1RKh3QD2fORGCFo2RKDKlvG9mjvPtUEQJ2tMixrx70VIV6j8BdWzQkbc1Nao6mvTWajyDhX3TFgljw==}
+    engines: {node: '>=20.0.0'}
+
+  '@supabase/storage-js@2.105.3':
+    resolution: {integrity: sha512-M7oPCCcHim/FsR6rKIs10Nd9mW051N2SQvA27jiVLa7oQMFFb7faX5dCQRV4GS5QeFsBcV5J/fWl4Ppoaw8cBQ==}
+    engines: {node: '>=20.0.0'}
+
+  '@supabase/supabase-js@2.105.3':
+    resolution: {integrity: sha512-5Dm9+I61LAWwjw+0zcqXhSmTxUJaYHBPyHwMCIBH4TBUNwDn2pYUIsi6oUu0I5r9HtLtaFl7w4wa+DV9gRsbDg==}
+    engines: {node: '>=20.0.0'}
+
   '@svgr/babel-plugin-add-jsx-attribute@8.0.0':
     resolution: {integrity: sha512-b9MIk7yhdS1pMCZM8VeNfUlSKVRhsHZNMl5O9SfaX0l0t5wjdgu4IDzGB8bpnGBBOjGST3rRFVsaaEtI4W6f7g==}
     engines: {node: '>=14'}
@@ -1647,6 +1712,14 @@ packages:
     peerDependencies:
       '@svgr/core': '*'
 
+  '@tanstack/query-core@5.100.9':
+    resolution: {integrity: sha512-SJSFw1S8+kQ0+knv/XGfrbocWoAlT7vDKsSImtLx3ZPQmEcR46hkDjLSvynSy25N8Ms4tIEini1FuBd5k7IscQ==}
+
+  '@tanstack/react-query@5.100.9':
+    resolution: {integrity: sha512-Oa44XkaI3kCNN6ME0KByU3xT3SEUNOMfZpHxL6+wFoTm+OeUFYHKdeYVe0aOXlRDm/f15sgLwEt2HDorIdW8+A==}
+    peerDependencies:
+      react: ^18 || ^19
+
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
 
@@ -1694,6 +1767,9 @@ packages:
 
   '@types/stack-utils@2.0.3':
     resolution: {integrity: sha512-9aEbYZ3TbYMznPdcdr3SmIrLXwC/AKZXQeCf9Pgao5CKb8CyHuEX5jzWPTkvregvhRJHcpRO6BFoGW9ycaOkYw==}
+
+  '@types/ws@8.18.1':
+    resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
   '@types/yargs-parser@21.0.3':
     resolution: {integrity: sha512-I4q9QU9MQv4oEOz4tAHJtNz1cwuLxn2F3xcc2iV5WdqLPpUnj30aUuxt1mAxYTG+oe8CZMV/+6rU4S4gRDzqtQ==}
@@ -2805,6 +2881,11 @@ packages:
       react-server-dom-webpack:
         optional: true
 
+  expo-secure-store@55.0.13:
+    resolution: {integrity: sha512-I6r0JNO1Fd4o0Gu7Ixiic7s89lqgdUHq17uBH9y1f/AntoyKn71TdtYJH82RgfsBbu5qNVzrwImmvlANyOlITQ==}
+    peerDependencies:
+      expo: '*'
+
   expo-server@55.0.8:
     resolution: {integrity: sha512-AoV5TKuO4biSzrhe/OVLyInfTT0pV9/OOc/g/oVq5vmCjL8SaSYTkES8PLt+67Tm7VqX+Dn0+kSx1nQcjEKaPw==}
     engines: {node: '>=20.16.0'}
@@ -3148,8 +3229,15 @@ packages:
   hyphenate-style-name@1.1.0:
     resolution: {integrity: sha512-WDC/ui2VVRrz3jOVi+XtjqkDjiVjTtFaAGiW37k6b+ohyQ5wYDOGkvCZa8+H0nx3gyvv0+BST9xuOgIyGQ00gw==}
 
+  iceberg-js@0.8.1:
+    resolution: {integrity: sha512-1dhVQZXhcHje7798IVM+xoo/1ZdVfzOMIc8/rgVSijRK38EDqOJoGula9N/8ZI5RD8QTxNQtK/Gozpr+qUqRRA==}
+    engines: {node: '>=20.0.0'}
+
   iconify-icon@2.3.0:
     resolution: {integrity: sha512-C0beI9oTDxQz6voI5CKl7MiJf0Lw4UU8K4G4t6pcUDClLmCvuMOpcvd8MAztQ2SfoH0iv7WHdxBFjekKPFKH2Q==}
+
+  idb@8.0.3:
+    resolution: {integrity: sha512-LtwtVyVYO5BqRvcsKuB2iUMnHwPVByPCXFXOpuU96IZPPoPN6xjOGxZQ74pgSVVLQWtUOYgyeL4GE98BY5D3wg==}
 
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
@@ -4231,6 +4319,12 @@ packages:
     peerDependencies:
       react: '>=17.0.0'
 
+  react-hook-form@7.75.0:
+    resolution: {integrity: sha512-Ovv94H+0p3sJ7B9B5QxPuCP1u8V/cHuVGyH55cSwodYDtoJwK+fqk3vjfIgSX59I2U/bU4z0nRJ9HMLpNiWEmw==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17 || ^18 || ^19
+
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
@@ -5101,8 +5195,11 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zustand@5.0.12:
-    resolution: {integrity: sha512-i77ae3aZq4dhMlRhJVCYgMLKuSiZAaUPAct2AksxQ+gOtimhGMdXljRT21P5BNpeT4kXlLIckvkPM029OljD7g==}
+  zod@4.4.3:
+    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+
+  zustand@5.0.13:
+    resolution: {integrity: sha512-efI2tVaVQPqtOh114loML/Z80Y4NP3yc+Ff0fYiZJPauNeWZeIp/bRFD7I9bfmCOYBh/PHxlglQ9+wvlwnPikQ==}
     engines: {node: '>=12.20.0'}
     peerDependencies:
       '@types/react': '>=18.0.0'
@@ -6211,6 +6308,11 @@ snapshots:
       chalk: 4.1.2
       js-yaml: 4.1.1
 
+  '@hookform/resolvers@5.2.2(react-hook-form@7.75.0(react@19.2.0))':
+    dependencies:
+      '@standard-schema/utils': 0.3.0
+      react-hook-form: 7.75.0(react@19.2.0)
+
   '@humanfs/core@0.19.1': {}
 
   '@humanfs/node@0.16.7':
@@ -6612,6 +6714,12 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.14
 
+  '@react-native-async-storage/async-storage@3.0.2(react-native@0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)':
+    dependencies:
+      idb: 8.0.3
+      react: 19.2.0
+      react-native: 0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)
+
   '@react-native/assets-registry@0.83.6': {}
 
   '@react-native/babel-plugin-codegen@0.83.4(@babel/core@7.29.0)':
@@ -6912,7 +7020,7 @@ snapshots:
   '@rn-primitives/portal@1.4.0(@types/react@19.2.14)(react-native-web@0.21.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-native@0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))':
     dependencies:
       react: 19.2.0
-      zustand: 5.0.12(@types/react@19.2.14)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
+      zustand: 5.0.13(@types/react@19.2.14)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
     optionalDependencies:
       react-native: 0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)
       react-native-web: 0.21.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -6960,6 +7068,48 @@ snapshots:
   '@sinonjs/fake-timers@10.3.0':
     dependencies:
       '@sinonjs/commons': 3.0.1
+
+  '@standard-schema/utils@0.3.0': {}
+
+  '@supabase/auth-js@2.105.3':
+    dependencies:
+      tslib: 2.8.1
+
+  '@supabase/functions-js@2.105.3':
+    dependencies:
+      tslib: 2.8.1
+
+  '@supabase/phoenix@0.4.1': {}
+
+  '@supabase/postgrest-js@2.105.3':
+    dependencies:
+      tslib: 2.8.1
+
+  '@supabase/realtime-js@2.105.3':
+    dependencies:
+      '@supabase/phoenix': 0.4.1
+      '@types/ws': 8.18.1
+      tslib: 2.8.1
+      ws: 8.20.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  '@supabase/storage-js@2.105.3':
+    dependencies:
+      iceberg-js: 0.8.1
+      tslib: 2.8.1
+
+  '@supabase/supabase-js@2.105.3':
+    dependencies:
+      '@supabase/auth-js': 2.105.3
+      '@supabase/functions-js': 2.105.3
+      '@supabase/postgrest-js': 2.105.3
+      '@supabase/realtime-js': 2.105.3
+      '@supabase/storage-js': 2.105.3
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   '@svgr/babel-plugin-add-jsx-attribute@8.0.0(@babel/core@7.29.0)':
     dependencies:
@@ -7040,6 +7190,13 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
+  '@tanstack/query-core@5.100.9': {}
+
+  '@tanstack/react-query@5.100.9(react@19.2.0)':
+    dependencies:
+      '@tanstack/query-core': 5.100.9
+      react: 19.2.0
+
   '@tybys/wasm-util@0.10.1':
     dependencies:
       tslib: 2.8.1
@@ -7097,6 +7254,10 @@ snapshots:
       csstype: 3.2.3
 
   '@types/stack-utils@2.0.3': {}
+
+  '@types/ws@8.18.1':
+    dependencies:
+      '@types/node': 25.6.0
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -8444,6 +8605,10 @@ snapshots:
       - expo-font
       - supports-color
 
+  expo-secure-store@55.0.13(expo@55.0.17):
+    dependencies:
+      expo: 55.0.17(@babel/core@7.29.0)(@expo/dom-webview@55.0.5)(@expo/metro-runtime@55.0.9)(expo-router@55.0.13)(react-dom@19.2.0(react@19.2.0))(react-native-worklets@0.7.4(@babel/core@7.29.0)(react-native@0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native@0.83.6(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+
   expo-server@55.0.8: {}
 
   expo-splash-screen@55.0.19(expo@55.0.17)(typescript@5.9.3):
@@ -8823,9 +8988,13 @@ snapshots:
 
   hyphenate-style-name@1.1.0: {}
 
+  iceberg-js@0.8.1: {}
+
   iconify-icon@2.3.0:
     dependencies:
       '@iconify/types': 2.0.0
+
+  idb@8.0.3: {}
 
   ignore@5.3.2: {}
 
@@ -9976,6 +10145,10 @@ snapshots:
     dependencies:
       react: 19.2.0
 
+  react-hook-form@7.75.0(react@19.2.0):
+    dependencies:
+      react: 19.2.0
+
   react-is@16.13.1: {}
 
   react-is@18.3.1: {}
@@ -10986,7 +11159,9 @@ snapshots:
 
   zod@3.25.76: {}
 
-  zustand@5.0.12(@types/react@19.2.14)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0)):
+  zod@4.4.3: {}
+
+  zustand@5.0.13(@types/react@19.2.14)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0)):
     optionalDependencies:
       '@types/react': 19.2.14
       react: 19.2.0

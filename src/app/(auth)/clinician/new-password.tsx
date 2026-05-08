@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { View, Text } from "react-native";
-import { CheckCircle } from "lucide-react-native";
+import { View, Text, ActivityIndicator } from "react-native";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, Controller } from "react-hook-form";
 import SuccessIcon from "@/assets/icons/success.svg";
 import { AuthShell } from "@/components/AuthShell";
 import { Button } from "@/components/ui/button";
@@ -13,22 +15,53 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
+import { updatePassword } from "@/lib/auth";
+import { newPasswordSchema } from "@/lib/validations/auth";
+import type { NewPasswordFormData } from "@/types/auth";
+
 const NewPassword = () => {
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [showPassword] = useState(false);
-  const [showConfirm] = useState(false);
-  const [passwordError, setPasswordError] = useState("");
+  const router = useRouter();
+  useLocalSearchParams<{ email: string }>();
   const [successVisible, setSuccessVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const isFilled = password.length > 0 && confirm.length > 0;
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<NewPasswordFormData>({
+    resolver: zodResolver(newPasswordSchema),
+    defaultValues: {
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
-  const handlePasswordBlur = () => {
-    if (password.length > 0 && password.length < 8) {
-      setPasswordError("Password must be at least 8 characters");
-    } else {
-      setPasswordError("");
+  const onSubmit = async (data: NewPasswordFormData) => {
+    setIsLoading(true);
+    setFormError(null);
+
+    try {
+      const { error } = await updatePassword({
+        newPassword: data.password,
+      });
+
+      if (error) {
+        setFormError(error.message);
+      } else {
+        setSuccessVisible(true);
+      }
+    } catch {
+      setFormError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handleDialogContinue = () => {
+    setSuccessVisible(false);
+    router.push("/(auth)/clinician/sign-in");
   };
 
   return (
@@ -50,44 +83,61 @@ const NewPassword = () => {
             <Text className="text-sm text-gray-600 font-medium">
               New Password
             </Text>
-            <Input
-              placeholder="••••••••"
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                setPasswordError("");
-              }}
-              onBlur={handlePasswordBlur}
-              className={passwordError ? "border-red-500" : ""}
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  placeholder="••••••••"
+                  secureTextEntry
+                  value={value}
+                  onChangeText={onChange}
+                />
+              )}
             />
-            {passwordError ? (
-              <Text className="text-red-500 text-sm">{passwordError}</Text>
-            ) : null}
+            {errors.password && (
+              <Text className="text-red-500 text-sm">{errors.password.message}</Text>
+            )}
           </View>
 
           <View className="gap-2">
             <Text className="text-sm text-gray-600 font-medium">
               Confirm Password
             </Text>
-            <Input
-              placeholder="••••••••"
-              secureTextEntry={!showConfirm}
-              value={confirm}
-              onChangeText={setConfirm}
+            <Controller
+              control={control}
+              name="confirmPassword"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  placeholder="••••••••"
+                  secureTextEntry
+                  value={value}
+                  onChangeText={onChange}
+                  className={errors.confirmPassword ? "border-red-500" : ""}
+                />
+              )}
             />
+            {errors.confirmPassword && (
+              <Text className="text-red-500 text-sm">{errors.confirmPassword.message}</Text>
+            )}
           </View>
         </View>
 
+        {formError && (
+          <Text className="text-red-500 text-sm text-center">{formError}</Text>
+        )}
+
         {/* Button */}
         <Button
-          className={`w-full rounded-2xl h-14 ${
-            isFilled && !passwordError ? "bg-[#2563EB]" : "bg-[#BFDBFE]"
-          }`}
-          disabled={!isFilled || !!passwordError}
-          onPress={() => setSuccessVisible(true)}
+          className="w-full rounded-2xl h-14 bg-[#2563EB]"
+          disabled={isLoading}
+          onPress={handleSubmit(onSubmit)}
         >
-          <Text className="text-white font-medium text-base">Continue</Text>
+          {isLoading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text className="text-white font-medium text-base">Continue</Text>
+          )}
         </Button>
       </View>
 
@@ -107,9 +157,7 @@ const NewPassword = () => {
           <DialogFooter>
             <Button
               className="bg-[#2563EB] rounded-[20px] h-14 w-full mt-6"
-              onPress={() => {
-                setSuccessVisible(false);
-              }}
+              onPress={handleDialogContinue}
             >
               <Text className="text-white font-medium text-base">Continue</Text>
             </Button>

@@ -1,8 +1,10 @@
 import React, { useRef, useState, useEffect } from "react";
-import { View, Text, TextInput, Pressable } from "react-native";
-import { useRouter } from "expo-router";
+import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { AuthShell } from "@/components/AuthShell";
 import { Button } from "@/components/ui/button";
+
+import { verifyOtp, resendOtp } from "@/lib/auth";
 
 const OTP_LENGTH = 6;
 const RESEND_SECONDS = 30;
@@ -11,10 +13,12 @@ type OtpState = "idle" | "error" | "success";
 
 const ClinicianOtp = () => {
   const router = useRouter();
+  const { email, flow } = useLocalSearchParams<{ email: string; flow: string }>();
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [otpState, setOtpState] = useState<OtpState>("idle");
   const [countdown, setCountdown] = useState(RESEND_SECONDS);
   const [canResend, setCanResend] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const inputRefs = useRef<(TextInput | null)[]>([]);
 
   const isFilled = otp.every((d) => d.length === 1);
@@ -47,13 +51,54 @@ const ClinicianOtp = () => {
     }
   };
 
-  const handleResend = () => {
-    if (!canResend) return;
-    setOtp(Array(OTP_LENGTH).fill(""));
+  const handleVerify = async () => {
+    if (!isFilled) return;
+    setIsLoading(true);
     setOtpState("idle");
-    setCountdown(RESEND_SECONDS);
-    setCanResend(false);
-    inputRefs.current[0]?.focus();
+
+    try {
+      const { error } = await verifyOtp({
+        email,
+        token: otp.join(""),
+      });
+
+      if (error) {
+        setOtpState("error");
+      } else {
+        setOtpState("success");
+        if (flow === "signup") {
+          router.push("/(auth)/clinician/acknowledge");
+        } else if (flow === "reset") {
+          router.push(`/(auth)/clinician/new-password?email=${encodeURIComponent(email)}`);
+        }
+      }
+    } catch {
+      setOtpState("error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!canResend) return;
+    setIsLoading(true);
+
+    try {
+      const { error } = await resendOtp({ email });
+      if (error) {
+        setOtpState("error");
+      } else {
+        setOtp(Array(OTP_LENGTH).fill(""));
+        setOtpState("idle");
+        setCountdown(RESEND_SECONDS);
+        setCanResend(false);
+        inputRefs.current[0]?.focus();
+      }
+    } catch {
+      setOtpState("error");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const boxColor = () => {
@@ -143,14 +188,14 @@ const ClinicianOtp = () => {
           className={`w-full rounded-2xl h-14 ${
             isFilled && otpState !== "error" ? "bg-[#2563EB]" : "bg-[#BFDBFE]"
           }`}
-          disabled={!isFilled || otpState === "error"}
-          onPress={() => {
-            // verify otp logic here
-            console.warn('OTP verification - navigate to new-password');
-            router.push('/(auth)/clinician/new-password');
-          }}
+          disabled={!isFilled || otpState === "error" || isLoading}
+          onPress={handleVerify}
         >
-          <Text className="text-white font-medium text-base">Continue</Text>
+          {isLoading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text className="text-white font-medium text-base">Continue</Text>
+          )}
         </Button>
 
         {/* Footer */}

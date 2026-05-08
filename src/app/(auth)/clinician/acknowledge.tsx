@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, Image, Pressable } from "react-native";
+import { useRouter } from "expo-router";
 import { AuthShell } from "@/components/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -32,6 +33,7 @@ const ACKNOWLEDGEMENTS = [
 ];
 
 const ClinicianAcknowledge = () => {
+  const router = useRouter();
   const [checked, setChecked] = useState<Record<string, boolean>>({});
 
   const allChecked = ACKNOWLEDGEMENTS.every((item) => checked[item.id]);
@@ -91,7 +93,7 @@ const ClinicianAcknowledge = () => {
           }`}
           disabled={!allChecked}
           onPress={() => {
-            // navigate to dashboard
+            router.replace("/(clinician)/");
           }}
         >
           <Text className="font-medium text-base text-white">

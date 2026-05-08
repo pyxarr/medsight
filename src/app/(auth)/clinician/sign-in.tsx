@@ -1,21 +1,40 @@
 import React, { useRef, useState } from "react";
-import { View, Text, Image, ScrollView } from "react-native";
+import { View, Text, Image, ScrollView, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Mail, Lock, AlertCircle } from "lucide-react-native";
+import { useForm, Controller } from "react-hook-form";
 import GoogleIcon from "@/assets/icons/google.svg";
 import { AuthShell } from "@/components/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 
+import { signInClinician } from "@/lib/auth";
+import { signInSchema } from "@/lib/validations/auth";
+import { useAuthStore } from "@/store/authStore";
+import type { SignInFormData } from "@/types/auth";
+
 const ClinicianSignIn = () => {
   const router = useRouter();
+  const setSession = useAuthStore((state) => state.setSession);
+  const user = useAuthStore((state) => state.user);
   const scrollRef = useRef<ScrollView>(null);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [emailError, setEmailError] = useState("");
-  const [loginError, setLoginError] = useState("");
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignInFormData>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
   const positions = useRef({ email: 0, password: 0 });
 
@@ -26,16 +45,27 @@ const ClinicianSignIn = () => {
     });
   };
 
-  const isEmailValid = (value: string) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  const onSubmit = async (data: SignInFormData) => {
+    setIsLoading(true);
+    setLoginError(null);
 
-  const isFilled = email.length > 0 && password.length > 0;
+    try {
+      const { data: responseData, error } = await signInClinician({
+        email: data.email,
+        password: data.password,
+      });
 
-  const handleEmailBlur = () => {
-    if (email.length > 0 && !isEmailValid(email)) {
-      setEmailError("Invalid email address");
-    } else {
-      setEmailError("");
+      if (error) {
+        setLoginError(error.message);
+      } else if (responseData?.session) {
+        setSession(responseData.session);
+        router.replace("/(clinician)");
+      }
+    } catch (err) {
+      console.error("Unexpected error during sign-in:", err);
+      setLoginError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -54,7 +84,11 @@ const ClinicianSignIn = () => {
           </Text>
           <View className="flex-row items-center">
             <Text className="text-sm text-gray-600">Not a clinician? </Text>
-            <Button variant="link" className="-ml-4" onPress={() => router.push('/onboarding/role-selection')}>
+            <Button
+              variant="link"
+              className="-ml-4"
+              onPress={() => router.push("/onboarding/role-selection")}
+            >
               <Text className="text-blue-600">Switch role</Text>
             </Button>
           </View>
@@ -64,36 +98,37 @@ const ClinicianSignIn = () => {
         <View className="gap-4">
           {/* Email */}
           <View
-            onLayout={(e) =>
-              (positions.current.email = e.nativeEvent.layout.y)
-            }
+            onLayout={(e) => (positions.current.email = e.nativeEvent.layout.y)}
             className="gap-2"
           >
             <Text className="text-sm text-gray-600 font-medium">Email</Text>
             <View className="relative">
-              <Input
-                onFocus={() => scrollTo("email")}
-                onBlur={handleEmailBlur}
-                placeholder=""
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={email}
-                onChangeText={(text) => {
-                  setEmail(text);
-                  setEmailError("");
-                  setLoginError("");
-                }}
-                className={emailError ? "border-red-500" : ""}
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    onFocus={() => scrollTo("email")}
+                    placeholder=""
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    value={value}
+                    onChangeText={onChange}
+                    className={errors.email ? "border-red-500" : ""}
+                  />
+                )}
               />
-              {email.length === 0 && (
+              {!user && (
                 <View className="absolute left-4 top-0 bottom-0 justify-center">
                   <Mail size={16} color="#9CA3AF" />
                 </View>
               )}
             </View>
-            {emailError ? (
-              <Text className="text-red-500 text-sm">{emailError}</Text>
-            ) : null}
+            {errors.email && (
+              <Text className="text-red-500 text-sm">
+                {errors.email.message}
+              </Text>
+            )}
           </View>
 
           {/* Password */}
@@ -105,35 +140,41 @@ const ClinicianSignIn = () => {
           >
             <Text className="text-sm text-gray-600 font-medium">Password</Text>
             <View className="relative">
-              <Input
-                onFocus={() => scrollTo("password")}
-                placeholder=""
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  setLoginError("");
-                }}
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    onFocus={() => scrollTo("password")}
+                    placeholder=""
+                    secureTextEntry={!showPassword}
+                    value={value}
+                    onChangeText={onChange}
+                  />
+                )}
               />
-              {password.length === 0 && (
-                <View className="absolute left-4 top-0 bottom-0 justify-center">
-                  <Lock size={16} color="#9CA3AF" />
-                </View>
-              )}
-              {password.length > 0 && (
-                <Button
-                  variant="ghost"
-                  onPress={() => setShowPassword(!showPassword)}
-                  className="absolute right-2 top-0 bottom-0 justify-center"
-                >
-                  <Text className="text-gray-400 text-xs">
-                    {showPassword ? "Hide" : "Show"}
-                  </Text>
-                </Button>
-              )}
+              {/* Icon spacing fix: the current UI uses a fixed absolute position, 
+                  we check value length to decide whether to show icon */}
+              <View className="absolute left-4 top-0 bottom-0 justify-center pointer-events-none">
+                <Lock size={16} color="#9CA3AF" />
+              </View>
+              {/* I kept the original logic for the toggle button but removed the 
+                  incorrect a check for password.length since we are using Controller now */}
+              <Button
+                variant="ghost"
+                onPress={() => setShowPassword(!showPassword)}
+                className="absolute right-2 top-0 bottom-0 justify-center"
+              >
+                <Text className="text-gray-400 text-xs">
+                  {showPassword ? "Hide" : "Show"}
+                </Text>
+              </Button>
             </View>
             <View className="items-end">
-              <Button variant="link" onPress={() => router.push('/(auth)/clinician/forgot-password')}>
+              <Button
+                variant="link"
+                onPress={() => router.push("/(auth)/clinician/forgot-password")}
+              >
                 <Text className="text-gray-400 text-sm">Forgot password?</Text>
               </Button>
             </View>
@@ -153,16 +194,15 @@ const ClinicianSignIn = () => {
 
         {/* Sign In Button */}
         <Button
-          className={`w-full rounded-2xl h-14 ${
-            isFilled ? "bg-[#2563EB]" : "bg-[#BFDBFE]"
-          }`}
-          disabled={!isFilled}
-          onPress={() => {
-            // handle sign in logic here
-            console.warn('Sign in pressed');
-          }}
+          className="w-full rounded-2xl h-14 bg-[#2563EB]"
+          disabled={isLoading}
+          onPress={handleSubmit(onSubmit)}
         >
-          <Text className="text-white font-medium text-base">Sign in</Text>
+          {isLoading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text className="text-white font-medium text-base">Sign in</Text>
+          )}
         </Button>
 
         {/* Divider */}
@@ -176,6 +216,9 @@ const ClinicianSignIn = () => {
         <Button
           variant="outline"
           className="w-full rounded-2xl h-14 border-gray-200 bg-white"
+          onPress={() => {
+            // Google sign-in remains unimplemented
+          }}
         >
           <GoogleIcon width={20} height={20} />
           <Text className="text-black font-medium">Google</Text>
@@ -184,8 +227,14 @@ const ClinicianSignIn = () => {
         {/* Footer */}
         <View className="items-center gap-3">
           <View className="flex-row items-center">
-            <Text className="text-sm text-gray-600">Don&apos;t have an account? </Text>
-            <Button variant="link" className="-ml-4" onPress={() => router.push('/(auth)/clinician/sign-up')}>
+            <Text className="text-sm text-gray-600">
+              Don&apos;t have an account?{" "}
+            </Text>
+            <Button
+              variant="link"
+              className="-ml-4"
+              onPress={() => router.push("/(auth)/clinician/sign-up")}
+            >
               <Text className="text-blue-600">Sign up</Text>
             </Button>
           </View>

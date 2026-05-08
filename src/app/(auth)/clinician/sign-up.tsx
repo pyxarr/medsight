@@ -1,15 +1,34 @@
 import React, { useRef } from "react";
 import { View, Text, Image, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, Controller } from "react-hook-form";
+
 import GoogleIcon from "@/assets/icons/google.svg";
 import { AuthShell } from "@/components/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 
+import { signUpSchema } from "@/lib/validations/auth";
+import type { SignUpFormData } from "@/types/auth";
+
 const ClinicianSignUp = () => {
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+    },
+  });
 
   const positions = useRef({
     firstName: 0,
@@ -22,6 +41,15 @@ const ClinicianSignUp = () => {
       y: positions.current[key] - 120,
       animated: true,
     });
+  };
+
+  const onSubmit = (data: SignUpFormData) => {
+    const params = new URLSearchParams({
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+    });
+    router.push(`/(auth)/clinician/password?${params.toString()}`);
   };
 
   return (
@@ -54,10 +82,21 @@ const ClinicianSignUp = () => {
             className="gap-2"
           >
             <Text className="text-sm text-gray-600 font-medium">Firstname</Text>
-            <Input
-              onFocus={() => scrollTo("firstName")}
-              placeholder="Firstname"
+            <Controller
+              control={control}
+              name="firstName"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  onFocus={() => scrollTo("firstName")}
+                  placeholder="Firstname"
+                  value={value}
+                  onChangeText={onChange}
+                />
+              )}
             />
+            {errors.firstName && (
+              <Text className="text-xs text-red-500">{errors.firstName.message}</Text>
+            )}
           </View>
 
           <View
@@ -67,10 +106,21 @@ const ClinicianSignUp = () => {
             className="gap-2"
           >
             <Text className="text-sm text-gray-600 font-medium">Lastname</Text>
-            <Input
-              onFocus={() => scrollTo("lastName")}
-              placeholder="Lastname"
+            <Controller
+              control={control}
+              name="lastName"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  onFocus={() => scrollTo("lastName")}
+                  placeholder="Lastname"
+                  value={value}
+                  onChangeText={onChange}
+                />
+              )}
             />
+            {errors.lastName && (
+              <Text className="text-xs text-red-500">{errors.lastName.message}</Text>
+            )}
           </View>
 
           <View
@@ -78,16 +128,30 @@ const ClinicianSignUp = () => {
             className="gap-2"
           >
             <Text className="text-sm text-gray-600 font-medium">Email</Text>
-            <Input
-              onFocus={() => scrollTo("email")}
-              keyboardType="email-address"
-              placeholder="Email"
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  onFocus={() => scrollTo("email")}
+                  keyboardType="email-address"
+                  placeholder="Email"
+                  value={value}
+                  onChangeText={onChange}
+                />
+              )}
             />
+            {errors.email && (
+              <Text className="text-xs text-red-500">{errors.email.message}</Text>
+            )}
           </View>
         </View>
 
         {/* Continue Button */}
-        <Button className="bg-[#BFDBFE] rounded-2xl h-14 w-full mt-4" onPress={() => router.push('/(auth)/clinician/otp')}>
+        <Button
+          className="bg-[#BFDBFE] rounded-2xl h-14 w-full mt-4"
+          onPress={handleSubmit(onSubmit)}
+        >
           <Text className="text-white font-medium text-xl">Continue</Text>
         </Button>
 

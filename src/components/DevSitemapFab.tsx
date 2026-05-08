@@ -58,7 +58,12 @@ export function DevSitemapFab() {
   }));
 
   const handlePress = () => {
-    pathname === "/_sitemap" ? router.back() : router.push("/_sitemap");
+    if (pathname === "/_sitemap") {
+      router.back();
+      return;
+    }
+
+    router.push("/_sitemap");
   };
 
   return (
