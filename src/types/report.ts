@@ -9,7 +9,7 @@ export interface RiskDriver {
 }
 
 export interface ReportData extends Assessment {
-  sampleId: string;
+  assessmentId: string;
   agreementLevel: AgreementLevel;
   riskDrivers: RiskDriver[];
   suggestedAction: string;
@@ -26,7 +26,7 @@ export const MOCK_REPORTS: ReportData[] = [
   {
     id: "1",
     patientId: "P-2026-9032",
-    sampleId: "S004",
+    assessmentId: "S004",
     sampleDate: "21/3/2026",
     riskLevel: "High",
     riskScore: 0.91,
@@ -42,7 +42,7 @@ export const MOCK_REPORTS: ReportData[] = [
   {
     id: "2",
     patientId: "P-2026-9031",
-    sampleId: "S003",
+    assessmentId: "S003",
     sampleDate: "21/3/2026",
     riskLevel: "Low",
     riskScore: 0.12,
@@ -58,7 +58,7 @@ export const MOCK_REPORTS: ReportData[] = [
   {
     id: "3",
     patientId: "P-2026-9030",
-    sampleId: "S002",
+    assessmentId: "S002",
     sampleDate: "20/3/2026",
     riskLevel: "High",
     riskScore: 0.91,
@@ -74,7 +74,7 @@ export const MOCK_REPORTS: ReportData[] = [
   {
     id: "4",
     patientId: "P-2026-9029",
-    sampleId: "S001",
+    assessmentId: "S001",
     sampleDate: "19/3/2026",
     riskLevel: "Medium",
     riskScore: 0.54,
@@ -90,7 +90,7 @@ export const MOCK_REPORTS: ReportData[] = [
   {
     id: "5",
     patientId: "P-2026-9028",
-    sampleId: "S000",
+    assessmentId: "S000",
     sampleDate: "18/3/2026",
     riskLevel: "Low",
     riskScore: 0.08,

@@ -31,7 +31,7 @@ export default function History() {
 
   const handleExpand = (id: string) => {
     router.push({
-      pathname: "/(clinician)/history/report/[id]",
+      pathname: "/(clinician)/report/[id]",
       params: { id }
     });
   };

@@ -1,1 +1,10 @@
+allowBuilds:
+  unrs-resolver: true
+minimumReleaseAgeExclude:
+  - babel-preset-expo@55.0.22
+  - expo-file-system@55.0.21
+  - expo-font@55.0.8
+  - expo-router@55.0.15
+  - expo-server@55.0.10
+  - expo-symbols@55.0.9
 nodeLinker: hoisted
