@@ -1,7 +1,10 @@
 import { View, Text } from "react-native";
 import { useLocalSearchParams } from "expo-router";
+import { ConfidenceByDataset } from "@/components/clinician/report/ConfidenceByDataset";
 import { CrossDatasetAgreement } from "@/components/clinician/report/CrossDatasetAgreement";
+import { FeatureContributionChart } from "@/components/clinician/report/FeatureContributionChart";
 import { KeyContributingFactors } from "@/components/clinician/report/KeyContributingFactors";
+import { OodWarningCard } from "@/components/clinician/report/OodWarningCard";
 import { ReportDisclaimer } from "@/components/clinician/report/ReportDisclaimer";
 import { RiskSummaryCard } from "@/components/clinician/report/RiskSummaryCard";
 import { SuggestedAction } from "@/components/clinician/report/SuggestedAction";
@@ -28,11 +31,12 @@ function mapApiResultToReportData(apiResult: BatchResultRow["result"], patientId
       });
 
   const rawDrivers = apiResult?.key_risk_drivers ?? [];
-  const riskDrivers = (rawDrivers as { feature?: string; contribution?: number }[])
+  const riskDrivers = (rawDrivers as { feature?: string; contribution?: number; direction?: string }[])
     .map((driver, index) => ({
       rank: index + 1,
       featureName: driver.feature ?? "Unknown",
       contribution: Math.round((driver.contribution ?? 0) * 100),
+      direction: (driver.direction === "increases_risk" ? "increases_risk" : "decreases_risk") as "increases_risk" | "decreases_risk",
     }));
 
   const validRiskLevels: RiskLevel[] = ["High", "Medium", "Low"];
@@ -53,6 +57,17 @@ function mapApiResultToReportData(apiResult: BatchResultRow["result"], patientId
     agreementLevel: (apiResult?.agreement as ReportData["agreementLevel"]) ?? "Single Model",
     riskDrivers,
     suggestedAction: apiResult?.clinical_guidance ?? "No guidance available.",
+    individualScores: (apiResult?.individual_scores as Record<string, number>) ?? {},
+    oodWarning: {
+      hasWarning: apiResult?.ood_warning?.has_warning ?? false,
+      flaggedFeatures: (apiResult?.ood_warning?.flagged ?? []).map((f: { feature: string }) =>
+        f.feature.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+      ),
+      severity: apiResult?.ood_warning?.flagged?.length
+        ? (apiResult.ood_warning.flagged.some((f: { severity: string }) => f.severity === "Major") ? "Major" : "Minor")
+        : null,
+    },
+    modelsUsed: apiResult?.models_used ?? 1,
   };
 }
 
@@ -99,10 +114,18 @@ export default function ReportScreen() {
 
       {/* Sections */}
       <View className="gap-6 pb-6">
+        {report.oodWarning?.hasWarning && (
+          <OodWarningCard
+            flaggedFeatures={report.oodWarning.flaggedFeatures}
+            severity={report.oodWarning.severity!}
+          />
+        )}
         <RiskSummaryCard report={report} />
         <CrossDatasetAgreement level={report.agreementLevel} />
         <KeyContributingFactors drivers={report.riskDrivers} />
-        <SuggestedAction action={report.suggestedAction} />
+        <FeatureContributionChart drivers={report.riskDrivers} />
+        <ConfidenceByDataset scores={report.individualScores ?? {}} riskScore={report.riskScore} />
+        <SuggestedAction action={report.suggestedAction} riskLevel={report.riskLevel} agreementLevel={report.agreementLevel} modelsUsed={report.modelsUsed ?? 1} />
         <ReportDisclaimer />
       </View>
     </ClinicianShell>

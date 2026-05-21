@@ -5,7 +5,8 @@ export type AgreementLevel = "High" | "Mixed" | "Low" | "Single Model";
 export interface RiskDriver {
   rank: number;
   featureName: string;
-  contribution: number; // positive = increases risk, negative = decreases
+  contribution: number; // signed: positive = increases risk, negative = decreases risk
+  direction: "increases_risk" | "decreases_risk";
 }
 
 export interface ReportData extends Assessment {
@@ -13,6 +14,13 @@ export interface ReportData extends Assessment {
   agreementLevel: AgreementLevel;
   riskDrivers: RiskDriver[];
   suggestedAction: string;
+  individualScores?: Record<string, number>; // e.g. { ucth: 0.86, wisconsin: 0.91, coimbra: 0.62 }
+  oodWarning?: {
+    hasWarning: boolean;
+    flaggedFeatures: string[];
+    severity: "Minor" | "Major" | null;
+  };
+  modelsUsed?: number;
 }
 
 export const AGREEMENT_CONFIG: Record<AgreementLevel, { bg: string; text: string; border: string }> = {
@@ -33,11 +41,14 @@ export const MOCK_REPORTS: ReportData[] = [
     confidence: 88,
     agreementLevel: "High",
     riskDrivers: [
-      { rank: 1, featureName: "Worst parameter",  contribution: 35 },
-      { rank: 2, featureName: "Concave points",   contribution: 28 },
-      { rank: 3, featureName: "Mean Compactness", contribution: 16 },
+      { rank: 1, featureName: "Worst parameter",  contribution: 35, direction: "increases_risk" },
+      { rank: 2, featureName: "Concave points",   contribution: 28, direction: "increases_risk" },
+      { rank: 3, featureName: "Mean Compactness", contribution: 16, direction: "increases_risk" },
     ],
     suggestedAction: "Priority follow-up recommended",
+    individualScores: { wisconsin: 0.91, ucth: 0.86, coimbra: 0.62 },
+    oodWarning: { hasWarning: false, flaggedFeatures: [], severity: null },
+    modelsUsed: 3,
   },
   {
     id: "2",
@@ -49,11 +60,14 @@ export const MOCK_REPORTS: ReportData[] = [
     confidence: 88,
     agreementLevel: "High",
     riskDrivers: [
-      { rank: 1, featureName: "Mean Radius",    contribution: -22 },
-      { rank: 2, featureName: "Texture SE",     contribution: -15 },
-      { rank: 3, featureName: "Smoothness",     contribution: -10 },
+      { rank: 1, featureName: "Mean Radius",    contribution: -22, direction: "decreases_risk" },
+      { rank: 2, featureName: "Texture SE",     contribution: -15, direction: "decreases_risk" },
+      { rank: 3, featureName: "Smoothness",     contribution: -10, direction: "decreases_risk" },
     ],
     suggestedAction: "Routine screening schedule. No immediate concerns identified.",
+    individualScores: { wisconsin: 0.05, ucth: 0.08, coimbra: 0.12 },
+    oodWarning: { hasWarning: false, flaggedFeatures: [], severity: null },
+    modelsUsed: 3,
   },
   {
     id: "3",
@@ -65,11 +79,14 @@ export const MOCK_REPORTS: ReportData[] = [
     confidence: 88,
     agreementLevel: "Mixed",
     riskDrivers: [
-      { rank: 1, featureName: "Worst parameter",  contribution: 35 },
-      { rank: 2, featureName: "Concave points",   contribution: 28 },
-      { rank: 3, featureName: "Mean Compactness", contribution: 16 },
+      { rank: 1, featureName: "Worst parameter",  contribution: 35, direction: "increases_risk" },
+      { rank: 2, featureName: "Concave points",   contribution: 28, direction: "increases_risk" },
+      { rank: 3, featureName: "Mean Compactness", contribution: 16, direction: "increases_risk" },
     ],
     suggestedAction: "Follow-up recommended. Mixed model agreement — clinical correlation important.",
+    individualScores: { wisconsin: 0.91, ucth: 0.86, coimbra: 0.62 },
+    oodWarning: { hasWarning: true, flaggedFeatures: ["Tumor Size", "Invasive Nodes"], severity: "Minor" },
+    modelsUsed: 3,
   },
   {
     id: "4",
@@ -81,11 +98,14 @@ export const MOCK_REPORTS: ReportData[] = [
     confidence: 72,
     agreementLevel: "Mixed",
     riskDrivers: [
-      { rank: 1, featureName: "Tumor Size",     contribution: 18 },
-      { rank: 2, featureName: "Invasive Nodes", contribution: 12 },
-      { rank: 3, featureName: "Age",            contribution: -8 },
+      { rank: 1, featureName: "Tumor Size",     contribution: 18, direction: "increases_risk" },
+      { rank: 2, featureName: "Invasive Nodes", contribution: 12, direction: "increases_risk" },
+      { rank: 3, featureName: "Age",            contribution: -8, direction: "decreases_risk" },
     ],
     suggestedAction: "Follow-up imaging within 3-6 months recommended.",
+    individualScores: { wisconsin: 0.54, ucth: 0.61, coimbra: 0.42 },
+    oodWarning: { hasWarning: true, flaggedFeatures: ["Radius SE", "Compactness"], severity: "Major" },
+    modelsUsed: 2,
   },
   {
     id: "5",
@@ -97,10 +117,13 @@ export const MOCK_REPORTS: ReportData[] = [
     confidence: 91,
     agreementLevel: "High",
     riskDrivers: [
-      { rank: 1, featureName: "Mean Radius",  contribution: -28 },
-      { rank: 2, featureName: "Smoothness",   contribution: -18 },
-      { rank: 3, featureName: "Texture SE",   contribution: -12 },
+      { rank: 1, featureName: "Mean Radius",  contribution: -28, direction: "decreases_risk" },
+      { rank: 2, featureName: "Smoothness",   contribution: -18, direction: "decreases_risk" },
+      { rank: 3, featureName: "Texture SE",   contribution: -12, direction: "decreases_risk" },
     ],
     suggestedAction: "Routine screening schedule. No immediate concerns identified.",
+    individualScores: { wisconsin: 0.05, ucth: 0.08, coimbra: 0.12 },
+    oodWarning: { hasWarning: false, flaggedFeatures: [], severity: null },
+    modelsUsed: 1,
   },
 ];

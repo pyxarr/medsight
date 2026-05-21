@@ -58,7 +58,7 @@ const ClinicianSignIn = () => {
         setLoginError(error.message);
       } else if (responseData?.session) {
         setSession(responseData.session);
-        router.replace("/(clinician)");
+        router.replace("/(clinician)" as any);
       }
     } catch (err) {
       console.error("Unexpected error during sign-in:", err);

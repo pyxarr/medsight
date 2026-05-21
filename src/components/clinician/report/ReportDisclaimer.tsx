@@ -3,23 +3,19 @@ import { Ionicons } from "@expo/vector-icons";
 
 export function ReportDisclaimer() {
   return (
-    <View className="mx-5 gap-3">
-      {/* Model limitations */}
-      <View className="flex-row items-center gap-2">
-        <Ionicons name="information-circle-outline" size={16} color="#9CA3AF" />
-        <Text className="text-xs text-gray-400">Model limitations apply</Text>
-      </View>
+    <View className="mx-5">
+      <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3">
+        {/* Header row */}
+        <View className="flex-row items-center gap-2 mb-2">
+          <Ionicons name="shield-checkmark-outline" size={14} color="#6B7280" />
+          <Text className="text-xs font-semibold tracking-widest text-gray-500 uppercase">
+            Model Limitations
+          </Text>
+        </View>
 
-      {/* Disclaimer box */}
-      <View className="bg-yellow-50 border border-yellow-200 rounded-2xl px-4 py-3">
-        <Text className="text-sm leading-5">
-          <Text className="font-bold text-red-600">
-            This tool provides clinical decision support only —{" "}
-          </Text>
-          <Text className="text-gray-600">
-            it does not provide diagnosis or replace professional medical judgment...
-          </Text>
-          <Text className="text-blue-600"> More</Text>
+        {/* Full disclaimer text */}
+        <Text className="text-xs text-gray-500" style={{ lineHeight: 18 }}>
+          This tool provides clinical decision support only — it does not replace professional medical judgement. Results should be interpreted alongside clinical findings, patient history, and specialist review. Not validated for use as a standalone diagnostic tool.
         </Text>
       </View>
     </View>

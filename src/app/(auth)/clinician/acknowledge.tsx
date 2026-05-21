@@ -93,7 +93,7 @@ const ClinicianAcknowledge = () => {
           }`}
           disabled={!allChecked}
           onPress={() => {
-            router.replace("/(clinician)/");
+            router.replace("/(clinician)" as any);
           }}
         >
           <Text className="font-medium text-base text-white">

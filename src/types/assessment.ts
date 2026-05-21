@@ -39,9 +39,17 @@ export interface BatchResultRow {
     risk_score: number;
     agreement: string;
     clinical_guidance: string;
-    individual_scores: Record<string, unknown>;
+    individual_scores: Record<string, number>;
     key_risk_drivers: string[];
-    ood_warning: Record<string, unknown>;
+    ood_warning: {
+      has_warning: boolean;
+      flagged: {
+        feature: string;
+        patient_value: number;
+        standard_deviations_away: number;
+        severity: "Minor" | "Major";
+      }[];
+    };
     assessment_id: string | null;
     created_at: string | null;
   };

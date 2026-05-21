@@ -125,7 +125,7 @@ const ClinicianOtp = () => {
           {otp.map((digit, index) => (
             <TextInput
               key={index}
-              ref={(ref) => (inputRefs.current[index] = ref)}
+              ref={(ref) => { inputRefs.current[index] = ref; }}
               value={digit}
               onChangeText={(value) => handleChange(value, index)}
               onKeyPress={(e) => handleKeyPress(e, index)}
