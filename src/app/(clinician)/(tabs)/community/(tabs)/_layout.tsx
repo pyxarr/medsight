@@ -1,16 +1,9 @@
 import { View, TouchableOpacity, Text, Platform } from "react-native";
-import { Tabs, useSegments } from "expo-router";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Tabs } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 
-function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
-  const segments = useSegments();
-  const isNonTabScreen = segments.some(
-    (s) => s === "report" || s === "batch-results" || s === "community"
-  );
-
-  if (isNonTabScreen) return null;
-
+function CommunityTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const onPress = (route: any, isFocused: boolean) => {
     const event = navigation.emit({
       type: "tabPress",
@@ -38,9 +31,8 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
         const isFocused = state.index === index;
         const labelMap: Record<string, string> = {
           index: "Home",
-          community: "Community",
-          history: "History",
-          profile: "Profile",
+          search: "Search",
+          chat: "Chat",
         };
         const label = labelMap[route.name] ?? options.title ?? route.name;
         const color = isFocused ? "#2563EB" : "#9CA3AF";
@@ -49,12 +41,10 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           switch (route.name) {
             case "index":
               return <Ionicons name={isFocused ? "home" : "home-outline"} size={24} color={color} />;
-            case "community":
-              return <MaterialCommunityIcons name={isFocused ? "account-group" : "account-group-outline"} size={24} color={color} />;
-            case "history":
-              return <MaterialCommunityIcons name="history" size={24} color={color} />;
-            case "profile":
-              return <Ionicons name={isFocused ? "person-circle" : "person-circle-outline"} size={24} color={color} />;
+            case "search":
+              return <Ionicons name={isFocused ? "search" : "search-outline"} size={24} color={color} />;
+            case "chat":
+              return <Ionicons name={isFocused ? "chatbubble" : "chatbubble-outline"} size={24} color={color} />;
             default:
               return null;
           }
@@ -91,19 +81,18 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   );
 }
 
-export default function ClinicianLayout() {
+export default function CommunityTabsLayout() {
   return (
     <Tabs
-      tabBar={(props) => <CustomTabBar {...props} />}
+      tabBar={(props) => <CommunityTabBar {...props} />}
       screenOptions={{
         headerShown: false,
         animation: "fade",
       }}
     >
       <Tabs.Screen name="index" options={{ title: "Home" }} />
-      <Tabs.Screen name="community" options={{ title: "Community" }} />
-      <Tabs.Screen name="history" options={{ title: "History" }} />
-      <Tabs.Screen name="profile" options={{ title: "Profile" }} />
+      <Tabs.Screen name="search" options={{ title: "Search" }} />
+      <Tabs.Screen name="chat" options={{ title: "Chat" }} />
     </Tabs>
   );
 }

@@ -13,24 +13,28 @@ interface ClinicianShellProps {
   children: React.ReactNode;
   scrollable?: boolean;
   showHeader?: boolean;
+  headerContent?: React.ReactNode;
 }
 
 export function ClinicianShell({
   children,
   scrollable = true,
   showHeader = true,
+  headerContent,
 }: ClinicianShellProps) {
+  const defaultHeader = (
+    <View className="flex-row items-center gap-2.5 px-5 pt-4 pb-4">
+      <Image
+        source={require("@/assets/images/logo-1.png")}
+        className="w-9 h-9"
+      />
+      <Text className="text-xl font-semibold">MedSight</Text>
+    </View>
+  );
+
   const content = (
     <View style={{ flexGrow: 1, justifyContent: 'center' }}>
-      {showHeader && (
-        <View className="flex-row items-center gap-2.5 px-5 pt-4 pb-4">
-          <Image
-            source={require("@/assets/images/logo-1.png")}
-            className="w-9 h-9"
-          />
-          <Text className="text-xl font-semibold">MedSight</Text>
-        </View>
-      )}
+      {showHeader && (headerContent ?? defaultHeader)}
       <View style={{ flex: 1, justifyContent: 'center' }}>
         {children}
       </View>
