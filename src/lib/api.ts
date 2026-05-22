@@ -5,6 +5,7 @@
 interface FetchApiOptions {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: BodyInit | Record<string, unknown>;
+  params?: Record<string, unknown>;
   token?: string;
 }
 
@@ -14,10 +15,16 @@ export async function fetchApi<TResponse>(
   path: string,
   options: FetchApiOptions = {}
 ): Promise<TResponse> {
-  const { method = "GET", body, token } = options;
+  const { method = "GET", body, params, token } = options;
 
   if (!baseUrl) {
     throw new Error("EXPO_PUBLIC_API_URL is not set. Check your .env file.");
+  }
+
+  let fullPath = path;
+  if (params) {
+    const query = new URLSearchParams(params as Record<string, string>).toString();
+    fullPath += `?${query}`;
   }
 
   const headers: Record<string, string> = {};
@@ -31,7 +38,7 @@ export async function fetchApi<TResponse>(
     headers["Content-Type"] = "application/json";
   }
 
-  const response = await fetch(`${baseUrl}${path}`, {
+  const response = await fetch(`${baseUrl}${fullPath}`, {
     method,
     headers,
     body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,

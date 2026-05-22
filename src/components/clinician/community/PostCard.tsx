@@ -1,51 +1,35 @@
-import { useState } from "react";
-import { View, Text, Image, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { View, Text, TouchableOpacity } from "react-native";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import type { CommunityPost } from "@/types/community";
 
 interface PostCardProps {
-  id: string;
-  author: {
-    name: string;
-    handle: string;
-    avatarUrl?: string;
-  };
-  content: string;
-  imageUrl?: string;
-  likes: number;
-  comments: number;
-  reposts: number;
-  riskScore?: number;
-  timestamp?: string;
+  post: CommunityPost;
+  onLike?: () => void;
+  onBookmark?: () => void;
+  isLikedOverride?: boolean;
+  isBookmarkedOverride?: boolean;
+  likeCountOverride?: number;
 }
 
 export function PostCard({
-  id,
-  author,
-  content,
-  imageUrl,
-  likes: initialLikes,
-  comments,
-  reposts,
-  riskScore,
-  timestamp,
+  post,
+  onLike,
+  onBookmark,
+  isLikedOverride,
+  isBookmarkedOverride,
+  likeCountOverride,
 }: PostCardProps) {
   const router = useRouter();
-  const [liked, setLiked] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
-  const [likeCount, setLikeCount] = useState(initialLikes);
 
-  const handleLike = () => {
-    setLiked((prev) => !prev);
-    setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
-  };
-
-  const handleBookmark = () => {
-    setBookmarked((prev) => !prev);
-  };
+  const isLiked = isLikedOverride ?? post.reaction_counts.is_liked;
+  const isBookmarked = isBookmarkedOverride ?? post.reaction_counts.is_bookmarked;
+  const likeCount = likeCountOverride ?? post.reaction_counts.like_count;
 
   const handlePress = () => {
-    router.push(`/community/post/${id}`);
+    router.push(`/community/post/${post.id}`);
   };
 
   return (
@@ -58,10 +42,11 @@ export function PostCard({
       <View className="flex-row items-center justify-between mb-3">
         <View className="flex-row items-center gap-3 flex-1">
           {/* Avatar */}
-          {author.avatarUrl ? (
+          {post.author.avatar_url ? (
             <Image
-              source={{ uri: author.avatarUrl }}
+              source={{ uri: post.author.avatar_url }}
               className="w-10 h-10 rounded-full"
+              contentFit="cover"
             />
           ) : (
             <View className="w-10 h-10 rounded-full bg-gray-200 items-center justify-center">
@@ -71,31 +56,28 @@ export function PostCard({
           {/* Name + Handle */}
           <View className="flex-1">
             <Text className="text-sm font-semibold text-gray-900">
-              {author.name}
-              <Text className="text-gray-400 font-normal"> {author.handle}</Text>
+              {post.author.display_name}
+              <Text className="text-gray-400 font-normal"> @{post.author.username}</Text>
             </Text>
           </View>
         </View>
-
-        {/* Risk score badge */}
-        {riskScore !== undefined && (
-          <View className="flex-row items-center gap-1">
-            <Ionicons name="bar-chart-outline" size={16} color="#374151" />
-            <Text className="text-sm font-semibold text-gray-700">{riskScore}</Text>
-          </View>
-        )}
       </View>
 
       {/* Content text */}
-      <Text className="text-sm text-gray-800 leading-5 mb-3">{content}</Text>
+      <Text className="text-sm text-gray-800 leading-5 mb-3">{post.content}</Text>
 
       {/* Optional image */}
-      {imageUrl && (
-        <Image
-          source={{ uri: imageUrl }}
-          className="w-full h-48 rounded-xl mb-3"
-          resizeMode="cover"
-        />
+      {!!post.media_url?.trim() && (
+        <View className="w-full h-48 rounded-xl mb-3 overflow-hidden">
+          <Image
+            source={{ uri: post.media_url }}
+            style={{ width: "100%", height: "100%" }}
+            contentFit="cover"
+            transition={200}
+            cachePolicy="memory-disk"
+            onError={(e) => console.error("Failed to load media:", post.media_url, e)}
+          />
+        </View>
       )}
 
       {/* Action bar */}
@@ -104,14 +86,14 @@ export function PostCard({
         <TouchableOpacity
           className="flex-row items-center gap-1.5"
           activeOpacity={0.7}
-          onPress={handleLike}
+          onPress={() => onLike?.()}
         >
           <Ionicons
-            name={liked ? "thumbs-up" : "thumbs-up-outline"}
+            name={isLiked ? "thumbs-up" : "thumbs-up-outline"}
             size={18}
-            color={liked ? "#2563EB" : "#6B7280"}
+            color={isLiked ? "#2563EB" : "#6B7280"}
           />
-          <Text className={`text-sm ${liked ? "text-blue-600" : "text-gray-500"}`}>
+          <Text className={`text-sm ${isLiked ? "text-blue-600" : "text-gray-500"}`}>
             {likeCount}
           </Text>
         </TouchableOpacity>
@@ -119,29 +101,35 @@ export function PostCard({
         {/* Comment */}
         <TouchableOpacity className="flex-row items-center gap-1.5" activeOpacity={0.7}>
           <Ionicons name="chatbubble-outline" size={18} color="#6B7280" />
-          <Text className="text-sm text-gray-500">{comments}</Text>
+          <Text className="text-sm text-gray-500">{post.reaction_counts.reply_count}</Text>
         </TouchableOpacity>
 
         {/* Repost */}
         <TouchableOpacity className="flex-row items-center gap-1.5" activeOpacity={0.7}>
           <Ionicons name="repeat-outline" size={18} color="#6B7280" />
-          <Text className="text-sm text-gray-500">{reposts}</Text>
+          <Text className="text-sm text-gray-500">{post.reaction_counts.repost_count}</Text>
         </TouchableOpacity>
 
+        {/* Views */}
+        <View className="flex-row items-center gap-1.5">
+          <Ionicons name="eye-outline" size={18} color="#6B7280" />
+          <Text className="text-sm text-gray-500">{post.view_count}</Text>
+        </View>
+
         {/* Bookmark */}
-        <TouchableOpacity activeOpacity={0.7} onPress={handleBookmark}>
+        <TouchableOpacity activeOpacity={0.7} onPress={() => onBookmark?.()}>
           <Ionicons
-            name={bookmarked ? "bookmark" : "bookmark-outline"}
+            name={isBookmarked ? "bookmark" : "bookmark-outline"}
             size={18}
-            color={bookmarked ? "#2563EB" : "#6B7280"}
+            color={isBookmarked ? "#2563EB" : "#6B7280"}
           />
         </TouchableOpacity>
       </View>
 
       {/* Timestamp */}
-      {timestamp && (
-        <Text className="text-xs text-gray-400 mt-2">{timestamp}</Text>
-      )}
+      <Text className="text-xs text-gray-400 mt-2">
+        {new Date(post.created_at).toLocaleDateString()}
+      </Text>
     </TouchableOpacity>
   );
 }

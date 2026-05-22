@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { View, Text, FlatList, TouchableOpacity } from "react-native";
-import { ClinicianShell } from "@/components/ClinicianShell";
-import { CommunitySearchBar } from "@/components/clinician/community/CommunitySearchBar";
 import { ChatItem } from "@/components/clinician/community/ChatItem";
+import { CommunitySearchBar } from "@/components/clinician/community/CommunitySearchBar";
+import { ClinicianShell } from "@/components/ClinicianShell";
 
 type FilterType = "recents" | "unread";
 
