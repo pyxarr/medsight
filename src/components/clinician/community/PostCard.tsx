@@ -34,7 +34,7 @@ export function PostCard({
 
   return (
     <TouchableOpacity
-      className="bg-white rounded-2xl border border-gray-200 p-4 mb-3"
+      className="bg-white rounded-lg border border-gray-200 p-2 mb-3"
       activeOpacity={0.95}
       onPress={handlePress}
     >
@@ -54,12 +54,15 @@ export function PostCard({
             </View>
           )}
           {/* Name + Handle */}
-          <View className="flex-1">
-            <Text className="text-sm font-semibold text-gray-900">
-              {post.author.display_name}
-              <Text className="text-gray-400 font-normal"> @{post.author.username}</Text>
-            </Text>
-          </View>
+           <View className="flex-row items-center gap-1 flex-1">
+             <Text className="text-sm font-semibold text-gray-900">
+               {post.author.display_name}
+             </Text>
+             {post.author.role === "clinician" && (
+               <Ionicons name="checkmark-circle" size={14} color="#2563EB" />
+             )}
+             <Text className="text-gray-400 font-normal text-sm"> @{post.author.username}</Text>
+           </View>
         </View>
       </View>
 

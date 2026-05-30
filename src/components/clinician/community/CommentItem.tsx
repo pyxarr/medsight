@@ -39,12 +39,17 @@ export function CommentItem({
             <Ionicons name="person" size={16} color="#6B7280" />
           </View>
         )}
-        <View className="flex-row items-center gap-1.5 flex-1">
-          <Text className="text-sm font-semibold text-gray-900">{post.author.display_name}</Text>
-          <Text className="text-xs text-gray-400">
-            {new Date(post.created_at).toLocaleDateString()}
-          </Text>
-        </View>
+         <View className="flex-row items-center gap-1.5 flex-1">
+           <View className="flex-row items-center gap-1">
+             <Text className="text-sm font-semibold text-gray-900">{post.author.display_name}</Text>
+             {post.author.role === "clinician" && (
+               <Ionicons name="checkmark-circle" size={14} color="#2563EB" />
+             )}
+           </View>
+           <Text className="text-xs text-gray-400">
+             {new Date(post.created_at).toLocaleDateString()}
+           </Text>
+         </View>
       </View>
 
       <Text className="text-sm text-gray-700 mb-3">{post.content}</Text>

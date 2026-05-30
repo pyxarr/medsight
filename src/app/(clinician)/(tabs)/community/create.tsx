@@ -9,9 +9,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from "react-native";
-import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -19,11 +21,30 @@ import { ClinicianShell } from "@/components/ClinicianShell";
 import { createPost } from "@/services/communityService";
 import { useAuthStore } from "@/store/authStore";
 
-export default function CreatePost() {
+/**
+ * Separate component for Video Preview to handle the useVideoPlayer hook.
+ */
+function VideoPreview({ uri }: { uri: string }) {
+  const player = useVideoPlayer(uri, (player) => {
+    player.loop = true;
+    player.play();
+  });
+
+  return (
+    <VideoView
+      style={{ width: "100%", height: 192, borderRadius: 12 }}
+      player={player}
+      nativeControls={true}
+    />
+  );
+}
+
+function CreatePost() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { session } = useAuthStore();
   const token = session?.access_token;
+  const userAvatar = session?.user?.user_metadata?.avatar_url;
 
   const [content, setContent] = useState("");
   const [selectedFile, setSelectedFile] = useState<{ uri: string; name: string; mimeType: string } | null>(null);
@@ -39,18 +60,46 @@ export default function CreatePost() {
     },
     onError: (error) => {
       console.error("Failed to create post:", error);
-      alert("Failed to create post. Please try again.");
+      Alert.alert("Error", "Failed to create post. Please try again.");
     },
   });
 
-  const handlePickDocument = async () => {
-    const result = await DocumentPicker.getDocumentAsync({ type: "image/*,video/*" });
-    if (!result.canceled) {
-      setSelectedFile({
-        uri: result.assets[0].uri,
-        name: result.assets[0].name,
-        mimeType: result.assets[0].mimeType || "application/octet-stream",
-      });
+  const handlePickMedia = async (useCamera: boolean) => {
+    try {
+      const permissionResult = useCamera 
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permissionResult.granted) {
+        Alert.alert(
+          "Permission Required", 
+          `Please allow access to your ${useCamera ? "camera" : "gallery"} in settings to upload media.`
+        );
+        return;
+      }
+
+      const options: ImagePicker.ImagePickerOptions = {
+        mediaTypes: ['images', 'videos'],
+        allowsEditing: !useCamera,
+        aspect: !useCamera ? [4, 3] : undefined,
+        quality: 1,
+      };
+
+      const result = useCamera 
+        ? await ImagePicker.launchCameraAsync(options)
+        : await ImagePicker.launchImageLibraryAsync(options);
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        setSelectedFile({
+          uri: asset.uri,
+          name: asset.fileName || `media_${Date.now()}`,
+          mimeType: asset.mimeType || (asset.uri.endsWith(".mp4") ? "video/mp4" : "image/jpeg"),
+        });
+      }
+    } catch (error) {
+      console.error("Error picking media:", error);
+      Alert.alert("Error", "An error occurred while selecting media.");
     }
   };
 
@@ -61,15 +110,14 @@ export default function CreatePost() {
         className="flex-1"
       >
         {/* Header */}
-        <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-100">
+        <View className="flex-row items-center justify-between px-4 py-4">
           <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2">
             <Text className="text-base text-gray-500">Cancel</Text>
           </TouchableOpacity>
-          <Text className="text-lg font-semibold text-gray-900">New Post</Text>
           <TouchableOpacity
             onPress={() => createPostMutation.mutate()}
             disabled={!content.trim() || createPostMutation.isPending}
-            className="px-4 py-2 bg-blue-600 rounded-full disabled:bg-gray-300"
+            className="px-6 py-2 bg-blue-600 rounded-full disabled:bg-gray-300"
           >
             {createPostMutation.isPending ? (
               <ActivityIndicator size="small" color="#fff" />
@@ -80,25 +128,54 @@ export default function CreatePost() {
         </View>
 
         <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
-          <View className="p-4">
-            <TextInput
-              className="text-base text-gray-900 min-h-[150px] text-left"
-              placeholder="What's on your mind?"
-              placeholderTextColor="#9CA3AF"
-              value={content}
-              onChangeText={setContent}
-              multiline
-              textAlignVertical="top"
-            />
+          <View className="px-4 py-2">
+            <View className="flex-row items-start">
+              {/* Avatar */}
+              {userAvatar ? (
+                <Image
+                  source={{ uri: userAvatar }}
+                  className="w-12 h-12 rounded-full mr-3"
+                />
+              ) : (
+                <View className="w-12 h-12 rounded-full bg-gray-200 items-center justify-center mr-3">
+                  <Ionicons name="person" size={24} color="#6B7280" />
+                </View>
+              )}
+
+              {/* Text Input */}
+              <TextInput
+                className="flex-1 text-base text-gray-900 min-h-[40px] text-left"
+                placeholder="Share your thoughts"
+                placeholderTextColor="#9CA3AF"
+                value={content}
+                onChangeText={setContent}
+                multiline
+                textAlignVertical="top"
+              />
+            </View>
+
+            {/* Media Toolbar */}
+            <View className="flex-row gap-5 mt-4 ml-15">
+              <TouchableOpacity onPress={() => handlePickMedia(true)} className="p-1">
+                <Ionicons name="camera-outline" size={24} color="#6B7280" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handlePickMedia(false)} className="p-1">
+                <Ionicons name="images-outline" size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
 
             {/* Media Preview */}
             {selectedFile && (
               <View className="mt-4 relative">
-                <Image
-                  source={{ uri: selectedFile.uri }}
-                  className="w-full h-48 rounded-xl"
-                  resizeMode="cover"
-                />
+                {selectedFile.mimeType?.startsWith("video") || selectedFile.uri.endsWith(".mp4") ? (
+                  <VideoPreview uri={selectedFile.uri} />
+                ) : (
+                  <Image
+                    source={{ uri: selectedFile.uri }}
+                    className="w-full h-48 rounded-xl"
+                    resizeMode="cover"
+                  />
+                )}
                 <TouchableOpacity
                   onPress={() => setSelectedFile(null)}
                   className="absolute top-2 right-2 bg-black/50 rounded-full p-1.5"
@@ -109,21 +186,9 @@ export default function CreatePost() {
             )}
           </View>
         </ScrollView>
-
-        {/* Footer */}
-        <View className="px-4 py-3 border-t border-gray-100 flex-row items-center justify-between">
-          <TouchableOpacity
-            onPress={handlePickDocument}
-            className="flex-row items-center gap-2 p-2 rounded-full bg-gray-50"
-          >
-            <Ionicons name="image-outline" size={24} color="#2563EB" />
-            <Text className="text-sm text-blue-600 font-medium">Add Media</Text>
-          </TouchableOpacity>
-          <Text className="text-xs text-gray-400">
-            {content.length}/500
-          </Text>
-        </View>
       </KeyboardAvoidingView>
     </ClinicianShell>
   );
 }
+
+export default CreatePost;

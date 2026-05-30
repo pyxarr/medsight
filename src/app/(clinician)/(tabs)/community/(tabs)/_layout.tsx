@@ -33,18 +33,21 @@ function CommunityTabBar({ state, descriptors, navigation }: BottomTabBarProps) 
           index: "Home",
           search: "Search",
           chat: "Chat",
+          notifications: "Notifications",
         };
         const label = labelMap[route.name] ?? options.title ?? route.name;
         const color = isFocused ? "#2563EB" : "#9CA3AF";
 
         const renderIcon = () => {
           switch (route.name) {
-            case "index":
+            case "home":
               return <Ionicons name={isFocused ? "home" : "home-outline"} size={24} color={color} />;
             case "search":
               return <Ionicons name={isFocused ? "search" : "search-outline"} size={24} color={color} />;
             case "chat":
               return <Ionicons name={isFocused ? "chatbubble" : "chatbubble-outline"} size={24} color={color} />;
+            case "notifications":
+              return <Ionicons name={isFocused ? "notifications" : "notifications-outline"} size={24} color={color} />;
             default:
               return null;
           }
@@ -70,7 +73,7 @@ function CommunityTabBar({ state, descriptors, navigation }: BottomTabBarProps) 
               }}
             >
               {renderIcon()}
-              <Text style={{ fontSize: 12, color }}>
+              <Text style={{ fontSize: 10, color }}>
                 {label}
               </Text>
             </View>
@@ -90,8 +93,9 @@ export default function CommunityTabsLayout() {
         animation: "fade",
       }}
     >
-      <Tabs.Screen name="index" options={{ title: "Home" }} />
+      <Tabs.Screen name="home" options={{ title: "Home" }} />
       <Tabs.Screen name="search" options={{ title: "Search" }} />
+      <Tabs.Screen name="notifications" options={{ title: "Notifications" }} />
       <Tabs.Screen name="chat" options={{ title: "Chat" }} />
     </Tabs>
   );
