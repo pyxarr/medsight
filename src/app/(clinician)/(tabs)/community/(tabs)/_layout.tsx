@@ -1,7 +1,7 @@
 import { View, TouchableOpacity, Text, Platform } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import type { BottomTabBarProps } from "expo-router/js-tabs";
 
 function CommunityTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const onPress = (route: any, isFocused: boolean) => {

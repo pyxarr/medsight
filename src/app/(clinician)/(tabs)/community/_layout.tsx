@@ -6,35 +6,35 @@ import { CommunityLoadingScreen } from "@/components/clinician/community/Communi
 export default function CommunityLayout() {
   const [isLoading, setIsLoading] = useState(true);
 
+  if (isLoading) {
+    return <CommunityLoadingScreen onAnimationComplete={() => setIsLoading(false)} />;
+  }
+
   return (
     <View style={{ flex: 1 }}>
-      {isLoading ? (
-        <CommunityLoadingScreen onAnimationComplete={() => setIsLoading(false)} />
-      ) : (
-        <Stack
-          screenOptions={{
-            headerShown: false,
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: "slide_from_right",
+          animationDuration: 250,
+        }}
+      >
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="profile/[id]"
+          options={{
             animation: "slide_from_right",
-            animationDuration: 250,
+            animationDuration: 200,
           }}
-        >
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen
-            name="profile/[id]"
-            options={{
-              animation: "slide_from_right",
-              animationDuration: 200,
-            }}
-          />
-          <Stack.Screen
-            name="post/[id]"
-            options={{
-              animation: "slide_from_right",
-              animationDuration: 200,
-            }}
-          />
-        </Stack>
-      )}
+        />
+        <Stack.Screen
+          name="post/[id]"
+          options={{
+            animation: "slide_from_right",
+            animationDuration: 200,
+          }}
+        />
+      </Stack>
     </View>
   );
 }

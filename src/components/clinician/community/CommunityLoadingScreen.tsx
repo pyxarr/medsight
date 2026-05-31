@@ -80,8 +80,8 @@ export function CommunityLoadingScreen({ onAnimationComplete }: CommunityLoading
 
 const styles = StyleSheet.create({
   container: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#2563EB", // Matching the blue in the image
+    ...StyleSheet.absoluteFill,
+    backgroundColor: "#2563EB",
     zIndex: 9999,
     alignItems: "center",
     justifyContent: "center",

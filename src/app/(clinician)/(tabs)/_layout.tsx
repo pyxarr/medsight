@@ -1,7 +1,7 @@
 import { View, TouchableOpacity, Text, Platform } from "react-native";
 import { Tabs, useSegments } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import type { BottomTabBarProps } from "expo-router/js-tabs";
 
 function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const segments = useSegments();

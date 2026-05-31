@@ -1,4 +1,5 @@
 allowBuilds:
+  msgpackr-extract: true
   unrs-resolver: true
 minimumReleaseAgeExclude:
   - babel-preset-expo@55.0.22
