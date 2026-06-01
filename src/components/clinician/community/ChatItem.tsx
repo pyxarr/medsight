@@ -1,7 +1,9 @@
 import { View, Text, Image, TouchableOpacity } from "react-native";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 interface ChatItemProps {
+  id: string;
   avatarUrl?: string;
   name: string;
   lastMessage: string;
@@ -12,6 +14,7 @@ interface ChatItemProps {
 }
 
 export function ChatItem({
+  id,
   avatarUrl,
   name,
   lastMessage,
@@ -20,8 +23,19 @@ export function ChatItem({
   seen,
   isGroup,
 }: ChatItemProps) {
+  const router = useRouter();
+
+  const handlePress = () => {
+    router.push(`/(clinician)/(tabs)/community/chat/${id}`);
+  };
+
   return (
-    <TouchableOpacity className="flex-row items-center px-5 py-3 border-b border-gray-100" activeOpacity={0.7}>
+    <TouchableOpacity 
+      className="flex-row items-center px-5 py-3 border-b border-gray-100" 
+      activeOpacity={0.7}
+      onPress={handlePress}
+    >
+
       {/* Avatar */}
       <View className="relative">
         {avatarUrl ? (

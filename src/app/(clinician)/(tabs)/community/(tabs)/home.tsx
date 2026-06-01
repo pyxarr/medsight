@@ -93,6 +93,12 @@ export default function CommunityFeed() {
     router.push("/(clinician)/(tabs)/profile");
   }
 
+  function handleBookmarkPress() {
+    setIsMenuOpen(false);
+    const userId = session?.user?.id ?? "1";
+    router.push(`/(clinician)/(tabs)/community/bookmark/${userId}` as any);
+  }
+
   function handleExitCommunityPress() {
     setIsMenuOpen(false);
     router.replace("/(clinician)/(tabs)");
@@ -289,6 +295,17 @@ export default function CommunityFeed() {
               <Ionicons name="settings-outline" size={22} color="#374151" />
               <Text className="text-sm font-medium text-gray-700">
                 Account settings
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleBookmarkPress}
+              activeOpacity={0.7}
+              className="flex-row items-center gap-3 px-4 py-3"
+            >
+              <Ionicons name="bookmark-outline" size={22} color="#374151" />
+              <Text className="text-sm font-medium text-gray-700">
+                Bookmarks
               </Text>
             </TouchableOpacity>
 
