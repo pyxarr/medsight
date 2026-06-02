@@ -1,54 +1,184 @@
-import { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-} from "react-native";
+import { useMemo, useState } from "react";
+import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { BatchResultRowCard } from "@/components/clinician/BatchResultRowCard";
 import { ClinicianShell } from "@/components/ClinicianShell";
-import type { BatchAssessmentResponse, BatchResultRow } from "@/types/assessment";
+import {
+  getAssessment,
+  listBatchAssessmentHistory,
+  listBatches,
+} from "@/services/assessmentService";
+import { useAuthStore } from "@/store/authStore";
+import type {
+  BatchAssessmentResponse,
+  BatchResultRow,
+} from "@/types/assessment";
 
 type FilterType = "all" | "failed" | "success" | "high_risk";
 
 export default function BatchResultsScreen() {
   const searchParams = useLocalSearchParams();
   const dataParam = searchParams.data as string | undefined;
+  const batchIdParam = (searchParams.batchId ?? searchParams.id) as string | undefined;
+  const { session } = useAuthStore();
+  const token = session?.access_token;
 
-  let parsedData: BatchAssessmentResponse | null = null;
-  if (dataParam) {
+  const parsedData = useMemo<BatchAssessmentResponse | null>(() => {
+    if (!dataParam) return null;
+
     try {
-      parsedData = JSON.parse(dataParam) as BatchAssessmentResponse;
+      return JSON.parse(dataParam) as BatchAssessmentResponse;
     } catch {
-      parsedData = null;
+      return null;
     }
-  }
+  }, [dataParam]);
+
+  const batchHistoryQuery = useQuery({
+    queryKey: ["history", "batch-results", batchIdParam],
+    queryFn: async () => {
+      if (!batchIdParam) throw new Error("No batch ID provided.");
+      if (!token) throw new Error("You must be logged in to view batch results.");
+
+      const [batchesResponse, batchAssessmentsResponse] = await Promise.all([
+        listBatches(token),
+        listBatchAssessmentHistory(batchIdParam, token),
+      ]);
+
+      const batchRecord = batchesResponse.results.find((batch) => batch.id === batchIdParam);
+
+      return { batchRecord, batchAssessmentsResponse };
+    },
+    enabled: !parsedData && !!batchIdParam && !!token,
+    staleTime: Infinity,
+    gcTime: 1000 * 60 * 60,
+  });
+
+  const batchAssessmentQueries = useQueries({
+    queries: (batchHistoryQuery.data?.batchAssessmentsResponse.results ?? []).map((summary) => ({
+      queryKey: ["assessment", summary.id],
+      queryFn: async () => {
+        if (!token) throw new Error("You must be logged in to view batch results.");
+        return await getAssessment(summary.id, token);
+      },
+      enabled: !parsedData && !!batchIdParam && !!token,
+      staleTime: Infinity,
+      gcTime: 1000 * 60 * 60 * 24,
+    })),
+  });
 
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
 
-  if (!parsedData) {
+  const historyParsedData = useMemo<BatchAssessmentResponse | null>(() => {
+    if (parsedData) return parsedData;
+    if (!batchIdParam || !batchHistoryQuery.data) return null;
+
+    const { batchRecord, batchAssessmentsResponse } = batchHistoryQuery.data;
+    const results: BatchResultRow[] = batchAssessmentsResponse.results.flatMap((summary, index) => {
+      const detailedAssessment = batchAssessmentQueries[index]?.data;
+      if (!detailedAssessment) return [];
+
+      return [
+        {
+          row_index: index + 1,
+          patient_id: summary.patient_id,
+          patient_name: summary.patient_name,
+          status: "success" as const,
+          result: {
+            id: detailedAssessment.id,
+            assessment_id: detailedAssessment.id,
+            risk_level: detailedAssessment.risk_level,
+            models_used: detailedAssessment.models_used ?? 1,
+            confidence_percent: detailedAssessment.confidence_percent,
+            risk_score: detailedAssessment.risk_score,
+            agreement: String(detailedAssessment.agreement ?? "Single Model"),
+            clinical_guidance: detailedAssessment.clinical_guidance,
+            individual_scores: detailedAssessment.individual_scores,
+            key_risk_drivers: detailedAssessment.key_risk_drivers,
+            ood_warning: detailedAssessment.ood_warning,
+            created_at: detailedAssessment.created_at,
+          },
+        } as BatchResultRow,
+      ];
+    });
+
+    return {
+      batch_id: batchIdParam,
+      summary: {
+        total: batchRecord?.total_records ?? batchAssessmentsResponse.total,
+        success: results.length,
+        failed: Math.max((batchRecord?.total_records ?? batchAssessmentsResponse.total) - results.length, 0),
+      },
+      results,
+    };
+  }, [batchAssessmentQueries, batchHistoryQuery.data, batchIdParam, parsedData]);
+
+  const isHistoryLoading =
+    !parsedData && !!batchIdParam && (
+      batchHistoryQuery.isLoading || batchAssessmentQueries.some((query) => query.isLoading)
+    );
+
+  const isHistoryError = !parsedData && !!batchIdParam && (
+    batchHistoryQuery.isError || batchAssessmentQueries.some((query) => query.isError)
+  );
+
+  const historyErrorMessage = batchHistoryQuery.error as Error | null;
+
+  const data = parsedData ?? historyParsedData;
+
+  if (!data) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <Text className="text-gray-500">No batch data available.</Text>
-        <TouchableOpacity
-          className="mt-4 bg-blue-600 px-6 py-3 rounded-md"
-          onPress={() => router.back()}
-        >
-          <Text className="text-white font-semibold">Go back</Text>
-        </TouchableOpacity>
-      </View>
+      <ClinicianShell>
+        <View className="flex-1 items-center justify-center px-10">
+          {isHistoryLoading ? (
+            <>
+              <ActivityIndicator size="large" color="#2563EB" />
+              <Text className="text-gray-400 text-sm mt-4">Loading batch...</Text>
+            </>
+          ) : isHistoryError ? (
+            <>
+              <Text className="text-gray-500 text-sm text-center">
+                {historyErrorMessage?.message || "Batch data could not be loaded."}
+              </Text>
+              <TouchableOpacity
+                className="mt-4 bg-blue-600 px-6 py-3 rounded-md"
+                onPress={() => router.back()}
+              >
+                <Text className="text-white font-semibold">Go back</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <Text className="text-gray-500">No batch data available.</Text>
+              <TouchableOpacity
+                className="mt-4 bg-blue-600 px-6 py-3 rounded-md"
+                onPress={() => router.back()}
+              >
+                <Text className="text-white font-semibold">Go back</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      </ClinicianShell>
     );
   }
 
-  const { batch_id, summary, results } = parsedData;
+  const { batch_id, summary, results } = data;
   const lastFourOfBatchId = batch_id.slice(-4).toUpperCase();
-  const processedDate = new Date().toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const batchRecord = batchHistoryQuery.data?.batchRecord;
+  const processedDate = batchRecord
+    ? new Date(batchRecord.created_at).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : new Date().toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
 
   const highRiskCount = results.filter(
     (row) => row.status === "success" && row.result?.risk_level === "High"
@@ -77,14 +207,15 @@ export default function BatchResultsScreen() {
     router.push({
       pathname: "/(clinician)/report/[id]",
       params: {
-        id: item.patient_id,
+        id: item.result.assessment_id ?? item.patient_id,
         data: JSON.stringify(item.result),
+        patientName: item.patient_name,
       },
     });
   };
 
   return (
-    <ClinicianShell>
+    <ClinicianShell scrollable={true}>
       <View className="flex-1 px-5 mt-3">
         {/* Title and subtitle */}
         <Text className="text-2xl text-gray-900 mb-2">

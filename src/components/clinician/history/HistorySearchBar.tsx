@@ -4,9 +4,10 @@ import { Ionicons } from "@expo/vector-icons";
 interface HistorySearchBarProps {
   value: string;
   onChangeText: (text: string) => void;
+  placeholder?: string;
 }
 
-export function HistorySearchBar({ value, onChangeText }: HistorySearchBarProps) {
+export function HistorySearchBar({ value, onChangeText, placeholder = "Search by patient ID" }: HistorySearchBarProps) {
   return (
     <View
       style={{
@@ -17,17 +18,17 @@ export function HistorySearchBar({ value, onChangeText }: HistorySearchBarProps)
         borderWidth: 1,
         borderColor: "#E5E7EB",
         paddingHorizontal: 16,
-        paddingVertical: 10,
+        paddingVertical: 4,
         gap: 8,
         marginHorizontal: 20,
-        marginBottom: 20,
+        marginBottom: 10,
       }}
     >
       <Ionicons name="search-outline" size={18} color="#9CA3AF" />
       <TextInput
         value={value}
         onChangeText={onChangeText}
-        placeholder="Search by patient ID"
+        placeholder={placeholder}
         placeholderTextColor="#9CA3AF"
         style={{ flex: 1, fontSize: 14, color: "#111827" }}
       />

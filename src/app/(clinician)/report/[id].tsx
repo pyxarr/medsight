@@ -11,20 +11,22 @@ import { ReportDisclaimer } from "@/components/clinician/report/ReportDisclaimer
 import { RiskSummaryCard } from "@/components/clinician/report/RiskSummaryCard";
 import { SuggestedAction } from "@/components/clinician/report/SuggestedAction";
 import { ClinicianShell } from "@/components/ClinicianShell";
-import { getAssessment } from "@/services/assessmentService";
+import { getAssessment, type AssessmentDetailResponse } from "@/services/assessmentService";
 import { useAuthStore } from "@/store/authStore";
 import type { RiskLevel } from "@/types/assessment";
-import { MOCK_REPORTS } from "@/types/report";
 import type { ReportData } from "@/types/report";
 
 /**
  * Translates raw API assessment results into a format used by the UI components.
  * Handles formatting of IDs (e.g., A-XXXX), dates, and normalizing risk levels.
  */
-function mapApiResultToReportData(apiResult: any, patientId: string): ReportData {
-  // If the result is already a ReportData object (e.g. from MOCK_REPORTS), return it directly
+function mapApiResultToReportData(apiResult: any, patientId: string, patientName?: string): ReportData {
+  // If the result is already a ReportData object, return it directly.
   if (apiResult && 'assessmentId' in apiResult && 'patientId' in apiResult) {
-    return apiResult as ReportData;
+    return {
+      ...apiResult,
+      patientName: apiResult.patientName ?? apiResult.patient_name ?? patientName ?? "Unknown patient",
+    } as ReportData;
   }
 
   const assessmentId = apiResult?.assessment_id || apiResult?.id
@@ -62,6 +64,7 @@ function mapApiResultToReportData(apiResult: any, patientId: string): ReportData
     return {
       id: apiResult?.assessment_id ?? apiResult?.id ?? "unknown",
       patientId: apiResult?.patient_id ?? patientId,
+      patientName: apiResult?.patient_name ?? patientName ?? "Unknown patient",
       assessmentId,
       sampleDate,
       riskLevel: normalisedRiskLevel,
@@ -85,33 +88,31 @@ function mapApiResultToReportData(apiResult: any, patientId: string): ReportData
 }
 
 export default function ReportScreen() {
-  const { id, data } = useLocalSearchParams<{ id?: string; data?: string }>();
+  const { id, data, patientName } = useLocalSearchParams<{ id?: string; data?: string; patientName?: string }>();
   const { session } = useAuthStore();
+  const initialReport = data ? mapApiResultToReportData(JSON.parse(data), id ?? "", patientName) : undefined;
 
   const { 
     data: report, 
     isLoading, 
     isError, 
     error 
-  } = useQuery({
+  } = useQuery<AssessmentDetailResponse, Error, ReportData>({
     queryKey: ['assessment', id],
     queryFn: async () => {
       if (!id) throw new Error("No assessment ID provided");
-
-      // 1. Check Mocks
-      const mock = MOCK_REPORTS.find((r) => r.id === id);
-      if (mock) return mock;
-
-      // 2. Fetch from API
       if (!session) throw new Error("Authentication required");
       return await getAssessment(id, session.access_token);
     },
-    select: (data) => mapApiResultToReportData(data, id ?? ""),
-    initialData: data ? JSON.parse(data) : undefined,
+    select: (data) => mapApiResultToReportData(data, id ?? "", patientName),
     enabled: !!id && !!session,
+    staleTime: Infinity,
+    gcTime: 1000 * 60 * 60 * 24,
   });
 
-  if (isLoading) {
+  const visibleReport = report ?? initialReport;
+
+  if (isLoading && !visibleReport) {
     return (
       <ClinicianShell>
         <View className="flex-1 items-center justify-center">
@@ -122,7 +123,7 @@ export default function ReportScreen() {
     );
   }
 
-  if (isError || !report) {
+  if (isError || !visibleReport) {
     return (
       <ClinicianShell>
         <View className="flex-1 items-center justify-center">
@@ -143,26 +144,27 @@ export default function ReportScreen() {
 
       {/* Patient ID + Assessment */}
       <View className="px-5 mb-6">
-        <Text className="text-lg font-bold text-gray-900">{report.patientId}</Text>
+        <Text className="text-lg font-bold text-gray-900">{visibleReport.patientName}</Text>
+        <Text className="text-sm text-gray-500 mt-0.5">{visibleReport.patientId}</Text>
         <Text className="text-sm text-gray-400 mt-0.5">
-          Assessment #{report.assessmentId} · {report.sampleDate}
+          Assessment #{visibleReport.assessmentId} · {visibleReport.sampleDate}
         </Text>
       </View>
 
       {/* Sections */}
       <View className="gap-6 pb-6">
-        {report.oodWarning?.hasWarning && (
+        {visibleReport.oodWarning?.hasWarning && (
           <OodWarningCard
-            flaggedFeatures={report.oodWarning.flaggedFeatures}
-            severity={report.oodWarning.severity!}
+            flaggedFeatures={visibleReport.oodWarning.flaggedFeatures}
+            severity={visibleReport.oodWarning.severity!}
           />
         )}
-        <RiskSummaryCard report={report} />
-        <CrossDatasetAgreement level={report.agreementLevel} />
-        <KeyContributingFactors drivers={report.riskDrivers} />
-        <FeatureContributionChart drivers={report.riskDrivers} />
-        <ConfidenceByDataset scores={report.individualScores ?? {}} riskScore={report.riskScore} />
-        <SuggestedAction action={report.suggestedAction} riskLevel={report.riskLevel} agreementLevel={report.agreementLevel} modelsUsed={report.modelsUsed ?? 1} />
+        <RiskSummaryCard report={visibleReport} />
+        <CrossDatasetAgreement level={visibleReport.agreementLevel} />
+        <KeyContributingFactors drivers={visibleReport.riskDrivers} />
+        <FeatureContributionChart drivers={visibleReport.riskDrivers} />
+        <ConfidenceByDataset scores={visibleReport.individualScores ?? {}} riskScore={visibleReport.riskScore} />
+        <SuggestedAction action={visibleReport.suggestedAction} riskLevel={visibleReport.riskLevel} agreementLevel={visibleReport.agreementLevel} modelsUsed={visibleReport.modelsUsed ?? 1} />
         <ReportDisclaimer />
       </View>
     </ClinicianShell>

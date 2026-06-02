@@ -183,6 +183,44 @@ export function ManualEntry() {
         </View>
       </TouchableOpacity>
 
+      {/* Biopsy info card */}
+      <View
+        style={{
+          backgroundColor: "#FFF7F7",
+          borderRadius: 16,
+          borderWidth: 1,
+          borderColor: "#FCA5A5",
+          padding: 16,
+          gap: 16,
+        }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              borderWidth: 3,
+              borderColor: "#F87171",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ionicons name="bandage-outline" size={20} color="#F87171" />
+          </View>
+          <Text style={{ fontSize: 16, fontWeight: "600", color: "#9CA3AF" }}>Biopsy data</Text>
+        </View>
+
+        <Text style={{ fontSize: 13, lineHeight: 20, color: "#6B7280" }}>
+          Evaluates biopsy based biomarkers and related indicators to assess risk, offering additional insights when processed through batch data upload
+        </Text>
+
+        <Text style={{ fontSize: 13, lineHeight: 20, color: "#DC2626" }}>
+          <Text style={{ fontWeight: "700" }}>Note: </Text>
+          Biopsy data must be entered using batch upload only. Manual entry is not supported.
+        </Text>
+      </View>
+
       {/* CTA */}
       <TouchableOpacity
         onPress={handleSubmit}

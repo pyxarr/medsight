@@ -3,6 +3,7 @@ export type RiskLevel = "High" | "Medium" | "Low";
 export interface Assessment {
   id: string;
   patientId: string;
+  patientName: string;
   sampleDate: string;
   riskLevel: RiskLevel;
   riskScore: number;
