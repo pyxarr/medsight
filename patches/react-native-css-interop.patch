@@ -1,0 +1,90 @@
+diff --git a/dist/metro/index.js b/dist/metro/index.js
+index c91ba6adf049dd5c6eec1ec8301ecc0802f41bfc..22c164c0b55d55aee4f25ae66b102ef9e5f261ff 100644
+--- a/dist/metro/index.js	
++++ b/dist/metro/index.js	
+@@ -98,10 +98,10 @@ function getConfig(config, options) {
+                         virtualModulesPossible = bundler
+                             .getDependencyGraph()
+                             .then(async (graph) => {
+-                            haste = graph._haste;
+-                            ensureFileSystemPatched(graph._fileSystem);
+-                            ensureBundlerPatched(bundler);
+-                        });
++                                haste = graph._haste;
++                                ensureFileSystemPatched(graph._fileSystem);
++                                ensureBundlerPatched(bundler);
++                            });
+                         server.use(async (_, __, next) => {
+                             await virtualModulesPossible;
+                             next();
+@@ -177,17 +177,21 @@ async function startCSSProcessor(filePath, platform, isDev, { input, getCSSForPl
+                 : getNativeJS((0, css_to_rn_1.cssToReactNativeRuntime)(css, options), debug)));
+             debug(`virtualStyles.emit ${platform}`);
+             haste.emit("change", {
+-                eventsQueue: [
+-                    {
+-                        filePath,
+-                        metadata: {
+-                            modifiedTime: Date.now(),
+-                            size: 1,
+-                            type: "virtual",
+-                        },
+-                        type: "change",
+-                    },
+-                ],
++                changes: {
++                    addedFiles: new Map(),
++                    modifiedFiles: new Map([
++                        [
++                            filePath,
++                            {
++                                modifiedTime: Date.now(),
++                                size: 1,
++                                type: "virtual",
++                            },
++                        ],
++                    ]),
++                    removedFiles: new Map(),
++                },
++                rootDir: require("path").resolve(__dirname, "../../.."),
+             });
+         }).then((css) => {
+             debug(`virtualStyles.initial ${platform}`);
+@@ -254,24 +258,24 @@ function stringify(data) {
+             else if (Array.isArray(data)) {
+                 return `[${data
+                     .map((value) => {
+-                    return value === null || value === undefined
+-                        ? ""
+-                        : stringify(value);
+-                })
++                        return value === null || value === undefined
++                            ? ""
++                            : stringify(value);
++                    })
+                     .join(",")}]`;
+             }
+             else {
+                 return `{${Object.entries(data)
+                     .flatMap(([key, value]) => {
+-                    if (value === null || value === undefined) {
+-                        return [];
+-                    }
+-                    if (key.match(/[^a-zA-Z]/)) {
+-                        key = `"${key}"`;
+-                    }
+-                    value = stringify(value);
+-                    return [`${key}:${value}`];
+-                })
++                        if (value === null || value === undefined) {
++                            return [];
++                        }
++                        if (key.match(/[^a-zA-Z]/)) {
++                            key = `"${key}"`;
++                        }
++                        value = stringify(value);
++                        return [`${key}:${value}`];
++                    })
+                     .join(",")}}`;
+             }
+         }
