@@ -11,3 +11,5 @@ minimumReleaseAgeExclude:
 nodeLinker: hoisted
 fetchRetries: 5
 fetchTimeout: 600000
+patchedDependencies:
+  react-native-css-interop: patches/react-native-css-interop.patch

@@ -20,6 +20,7 @@ interface AuthShellProps {
   scrollable?: boolean;
   showBackButton?: boolean;
   scrollRef?: React.RefObject<ScrollView | null>;
+  role?: "member" | "clinician";
 }
 
 export function AuthShell({
@@ -27,6 +28,7 @@ export function AuthShell({
   scrollable = true,
   showBackButton = false,
   scrollRef,
+  role = "member",
 }: AuthShellProps) {
   const router = useRouter();
   const internalScrollRef = useRef<ScrollView>(null);
@@ -38,7 +40,7 @@ export function AuthShell({
       {/* Top-left logo */}
       <View className="flex-row items-center gap-2.5 mb-6 px-5 pt-2">
         <Image
-          source={require("@/assets/images/logo-1.png")}
+          source={role === "clinician" ? require("@/assets/images/logo-1.png") : require("@/assets/images/logo-2.png")}
           className="w-9 h-9"
         />
         <Text className="text-xl font-semibold">MedSight</Text>
@@ -64,7 +66,7 @@ export function AuthShell({
   );
 
   return (
-    <LinearGradient colors={["#E5F1FF", "#FFFFFF"]} style={{ flex: 1 }}>
+    <LinearGradient colors={[`${role === "clinician" ? "#E5F1FF" : "#FDF3F8"}`, "#FFFFFF"]} style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }} edges={["bottom", "top"]}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}

@@ -124,7 +124,7 @@ export default function OnboardingSlides() {
 
   // Stable ref to goTo — lets startTyping and panResponder call the latest
   // version of goTo without capturing a stale closure at creation time
-  const goToRef = useRef<(n: number) => void>(() => {});
+  const goToRef = useRef<(n: number) => void>(() => { });
 
   // Drives the full slide transition sequence:
   // 1. Cancel any in-flight animations and timers
@@ -285,9 +285,8 @@ export default function OnboardingSlides() {
             {SLIDES.map((_, dotIndex) => (
               <View
                 key={dotIndex}
-                className={`h-2 rounded-xl ${
-                  renderIndex === dotIndex ? 'w-12 bg-white' : 'w-8 bg-white/35'
-                }`}
+                className={`h-2 rounded-xl ${renderIndex === dotIndex ? 'w-12 bg-white' : 'w-8 bg-white/35'
+                  }`}
               />
             ))}
           </View>
