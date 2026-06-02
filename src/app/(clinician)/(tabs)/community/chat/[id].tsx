@@ -9,12 +9,12 @@ import {
   Platform,
   Alert
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ClinicianShell } from "@/components/ClinicianShell";
-import * as ImagePicker from "expo-image-picker";
 
 interface Message {
   id: string;

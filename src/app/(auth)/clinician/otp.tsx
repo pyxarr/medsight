@@ -25,7 +25,7 @@ const ClinicianOtp = () => {
 
   useEffect(() => {
     if (countdown === 0) {
-      setCanResend(true);
+      setTimeout(() => setCanResend(true), 0);
       return;
     }
     const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);

@@ -1,14 +1,66 @@
-import { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import { router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { submitManualAssessment } from "@/services/assessmentService";
+import { useAuthStore } from "@/store/authStore";
+import { useManualAssessmentStore } from "@/store/manualAssessmentStore";
 
 export function ManualEntry() {
-  const [biopsySelected, setBiopsySelected] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { session } = useAuthStore();
+  const { 
+    firstName, 
+    lastName, 
+    clinicalData, 
+    bloodData, 
+    resetAssessment 
+  } = useManualAssessmentStore();
+
+  const isClinicalFilled = 
+    firstName.trim() !== "" && 
+    lastName.trim() !== "" && 
+    Object.values(clinicalData).every(val => val !== "");
+  
+  const isBloodFilled = Object.values(bloodData).some(val => val !== "");
+
+      const handleSubmit = async () => {
+        if (!session) {
+          Alert.alert("Error", "You must be logged in to submit an assessment.");
+          return;
+        }
+
+        setIsSubmitting(true);
+        try {
+          const payload = {
+            first_name: firstName,
+            last_name: lastName,
+            clinical_data: clinicalData,
+            blood_panel: isBloodFilled ? bloodData : undefined,
+          };
+
+          const result = await submitManualAssessment(payload, session.access_token);
+          
+          // Reset store after successful submission
+          resetAssessment();
+          
+          // Navigate to the report screen, passing the result data directly for instant loading
+          router.push({ 
+            pathname: `/(clinician)/report/${result.assessment_id}` as any, 
+            params: { data: JSON.stringify(result) } 
+          });
+        } catch (error: any) {
+          Alert.alert("Submission Failed", error.message || "An unexpected error occurred.");
+        } finally {
+          setIsSubmitting(false);
+        }
+      };
 
   return (
     <View style={{ flex: 1, paddingHorizontal: 20, gap: 16 }}>
       {/* Clinical data — always selected */}
-      <View
+      <TouchableOpacity
+        onPress={() => router.push("/(clinician)/manual-clinical")}
         style={{
           backgroundColor: "#EFF6FF",
           borderRadius: 16,
@@ -19,6 +71,7 @@ export function ManualEntry() {
           alignItems: "flex-start",
           justifyContent: "space-between",
         }}
+        activeOpacity={0.8}
       >
         <View style={{ flexDirection: "row", gap: 12, flex: 1 }}>
           <View
@@ -46,31 +99,30 @@ export function ManualEntry() {
             </Text>
           </View>
         </View>
-        {/* Always checked — not toggleable */}
         <View
           style={{
             width: 20,
             height: 20,
             borderRadius: 4,
-            backgroundColor: "#2563EB",
+            backgroundColor: isClinicalFilled ? "#2563EB" : "#D1D5DB",
             alignItems: "center",
             justifyContent: "center",
             marginLeft: 8,
             marginTop: 2,
           }}
         >
-          <Ionicons name="checkmark" size={14} color="white" />
+          {isClinicalFilled && <Ionicons name="checkmark" size={14} color="white" />}
         </View>
-      </View>
+      </TouchableOpacity>
 
-      {/* Biopsy data — toggleable */}
+      {/* Blood data — toggleable */}
       <TouchableOpacity
-        onPress={() => setBiopsySelected(!biopsySelected)}
+        onPress={() => router.push("/(clinician)/manual-blood")}
         style={{
-          backgroundColor: biopsySelected ? "#F5F3FF" : "#FAFAFA",
+          backgroundColor: isBloodFilled ? "#F5F3FF" : "#FAFAFA",
           borderRadius: 16,
           borderWidth: 1,
-          borderColor: biopsySelected ? "#DDD6FE" : "#F3F4F6",
+          borderColor: isBloodFilled ? "#DDD6FE" : "#F3F4F6",
           padding: 16,
           flexDirection: "row",
           alignItems: "flex-start",
@@ -84,31 +136,30 @@ export function ManualEntry() {
               width: 40,
               height: 40,
               borderRadius: 20,
-              backgroundColor: biopsySelected ? "#EDE9FE" : "#F3F4F6",
+              backgroundColor: isBloodFilled ? "#EDE9FE" : "#F3F4F6",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
             <MaterialCommunityIcons
-              name="stethoscope"
+              name="water"
               size={20}
-              color={biopsySelected ? "#7C3AED" : "#9CA3AF"}
+              color={isBloodFilled ? "#7C3AED" : "#9CA3AF"}
             />
           </View>
           <View style={{ flex: 1 }}>
             <Text
               style={{
                 fontWeight: "600",
-                color: biopsySelected ? "#111827" : "#6B7280",
+                color: isBloodFilled ? "#111827" : "#6B7280",
                 marginBottom: 4,
               }}
             >
-              Biopsy data
+              Blood data
             </Text>
             <Text style={{ fontSize: 13, color: "#6B7280", lineHeight: 20 }}>
-              Analyzes biopsy findings including tissue characteristics and
-              pathology results to deliver a more detailed and evidence based
-              risk assessment.
+              Analyzes blood based biomarkers and related indicators to assess
+              risk, offering additional insights for a more complete report.
             </Text>
           </View>
         </View>
@@ -118,94 +169,40 @@ export function ManualEntry() {
             height: 20,
             borderRadius: 4,
             borderWidth: 2,
-            borderColor: biopsySelected ? "#7C3AED" : "#D1D5DB",
-            backgroundColor: biopsySelected ? "#7C3AED" : "transparent",
+            borderColor: isBloodFilled ? "#7C3AED" : "#D1D5DB",
+            backgroundColor: isBloodFilled ? "#7C3AED" : "transparent",
             alignItems: "center",
             justifyContent: "center",
             marginLeft: 8,
             marginTop: 2,
           }}
         >
-          {biopsySelected && (
+          {isBloodFilled && (
             <Ionicons name="checkmark" size={14} color="white" />
           )}
         </View>
       </TouchableOpacity>
 
-      {/* Blood data — disabled */}
-      <View
-        style={{
-          backgroundColor: "#FFF1F2",
-          borderRadius: 16,
-          borderWidth: 1,
-          borderColor: "#FFE4E6",
-          padding: 16,
-          flexDirection: "row",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          opacity: 0.8,
-        }}
-      >
-        <View style={{ flexDirection: "row", gap: 12, flex: 1 }}>
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: "#FFE4E6",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Ionicons name="water-outline" size={20} color="#F43F5E" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text
-              style={{ fontWeight: "600", color: "#9CA3AF", marginBottom: 4 }}
-            >
-              Blood data
-            </Text>
-            <Text style={{ fontSize: 13, color: "#9CA3AF", lineHeight: 20 }}>
-              Evaluates blood based biomarkers and related indicators to assess
-              risk, offering additional insights when processed through batch
-              data upload
-            </Text>
-            <Text
-              style={{ fontSize: 12, color: "#F43F5E", marginTop: 8, lineHeight: 18 }}
-            >
-              <Text style={{ fontWeight: "600" }}>Note</Text>: Blood data must
-              be entered using batch upload only. Manual entry is not supported.
-            </Text>
-          </View>
-        </View>
-        <View
-          style={{
-            width: 20,
-            height: 20,
-            borderRadius: 4,
-            borderWidth: 2,
-            borderColor: "#FECDD3",
-            marginLeft: 8,
-            marginTop: 2,
-            opacity: 0.5,
-          }}
-        />
-      </View>
-
       {/* CTA */}
       <TouchableOpacity
+        onPress={handleSubmit}
         style={{
-          backgroundColor: "#2563EB",
+          backgroundColor: isClinicalFilled ? "#2563EB" : "#9CA3AF",
           borderRadius: 999,
           paddingVertical: 16,
           alignItems: "center",
           marginTop: 4,
         }}
         activeOpacity={0.8}
+        disabled={!isClinicalFilled || isSubmitting}
       >
-        <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>
-          View Analysis report
-        </Text>
+        {isSubmitting ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>
+            View Analysis report
+          </Text>
+        )}
       </TouchableOpacity>
     </View>
   );
