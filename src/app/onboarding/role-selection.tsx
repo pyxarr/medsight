@@ -15,7 +15,11 @@ export default function RoleSelection() {
   const { width, height } = useWindowDimensions();
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#E6E1FE" }}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: "#E6E1FE" }}
+      contentContainerStyle={{ flexGrow: 1 }}
+      showsVerticalScrollIndicator={false}
+    >
       <Svg
         width={width}
         height={height}
@@ -51,7 +55,8 @@ export default function RoleSelection() {
           <View className="bg-white rounded-3xl overflow-hidden p-2 pb-1">
             <Image
               source={require("@/assets/images/onboarding/role-member.png")}
-              className="w-full h-[160px] rounded-2xl"
+              className="w-full rounded-2xl"
+              style={{ height: 260 }}
               resizeMode="cover"
             />
             <View className="px-2 py-3 gap-2">
@@ -77,7 +82,8 @@ export default function RoleSelection() {
           <View className="bg-white rounded-3xl overflow-hidden p-2 pb-1">
             <Image
               source={require("@/assets/images/onboarding/role-clinician.png")}
-              className="w-full h-[160px] rounded-2xl"
+              className="w-full rounded-2xl"
+              style={{ height: 260 }}
               resizeMode="cover"
             />
             <View className="px-2 py-3 gap-2">
@@ -100,6 +106,6 @@ export default function RoleSelection() {
           </View>
         </ScrollView>
       </SafeAreaView>
-    </View>
+    </ScrollView>
   );
 }

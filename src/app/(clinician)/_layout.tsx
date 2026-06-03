@@ -1,7 +1,10 @@
 import { Stack } from "expo-router";
+import { RoleGuard } from "@/components/auth/RoleGuard";
 
 export default function ClinicianLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false }} />
+    <RoleGuard requiredRole="clinician">
+      <Stack screenOptions={{ headerShown: false }} />
+    </RoleGuard>
   );
 }

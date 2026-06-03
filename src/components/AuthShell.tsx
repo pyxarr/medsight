@@ -28,7 +28,7 @@ export function AuthShell({
   scrollable = true,
   showBackButton = false,
   scrollRef,
-  role = "member",
+  role = "clinician",
 }: AuthShellProps) {
   const router = useRouter();
   const internalScrollRef = useRef<ScrollView>(null);
