@@ -52,6 +52,7 @@ export default function History() {
   const queryClient = useQueryClient();
   const { session } = useAuthStore();
   const token = session?.access_token;
+  const userId = session?.user?.id;
 
   const [activeTab, setActiveTab] = useState<HistoryTab>("assessments");
   const [search, setSearch] = useState("");
@@ -95,12 +96,13 @@ export default function History() {
   const assessmentQueryKey = useMemo(
     () => [
       "history",
+      userId,
       "assessments",
       assessmentFilters.patientId ?? "",
       assessmentFilters.patientName ?? "",
       assessmentFilters.riskLevel ?? "",
     ] as const,
-    [assessmentFilters.patientId, assessmentFilters.patientName, assessmentFilters.riskLevel]
+    [userId, assessmentFilters.patientId, assessmentFilters.patientName, assessmentFilters.riskLevel]
   );
 
   const {
@@ -135,7 +137,7 @@ export default function History() {
     error: batchHistoryError,
     refetch: refetchBatchHistory,
   } = useQuery({
-    queryKey: ["history", "batches"],
+    queryKey: ["history", userId, "batches"],
     queryFn: async () => {
       if (!token) throw new Error("You must be logged in to view history.");
       return await listBatches(token);

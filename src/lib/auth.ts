@@ -37,13 +37,14 @@ export async function signUpClinician({
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: {
-      data: {
-        role: "clinician",
-        first_name: firstName,
-        last_name: lastName,
+      options: {
+        data: {
+          role: "clinician",
+          first_name: firstName,
+          last_name: lastName,
+          acknowledged: false,
+        },
       },
-    },
   });
 
   return { data, error };

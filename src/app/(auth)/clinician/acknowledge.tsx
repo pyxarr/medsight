@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { View, Text, Image, Pressable } from "react-native";
+import { View, Text, Image, Pressable, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { AuthShell } from "@/components/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { supabase } from "@/lib/supabase";
 
 const ACKNOWLEDGEMENTS = [
   {
@@ -35,11 +36,29 @@ const ACKNOWLEDGEMENTS = [
 const ClinicianAcknowledge = () => {
   const router = useRouter();
   const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const allChecked = ACKNOWLEDGEMENTS.every((item) => checked[item.id]);
 
   const toggle = (id: string) => {
     setChecked((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleAcknowledge = async () => {
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { acknowledged: true },
+      });
+
+      if (error) throw error;
+      
+      router.replace("/(clinician)" as any);
+    } catch (err) {
+      console.error("Error updating acknowledgment:", err);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   return (
@@ -91,14 +110,16 @@ const ClinicianAcknowledge = () => {
           className={`w-full rounded-2xl h-14 ${
             allChecked ? "bg-[#2563EB]" : "bg-[#BFDBFE]"
           }`}
-          disabled={!allChecked}
-          onPress={() => {
-            router.replace("/(clinician)" as any);
-          }}
+          disabled={!allChecked || isUpdating}
+          onPress={handleAcknowledge}
         >
-          <Text className="font-medium text-base text-white">
-            I acknowledge all items
-          </Text>
+          {isUpdating ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text className="font-medium text-base text-white">
+              I acknowledge all items
+            </Text>
+          )}
         </Button>
       </View>
     </AuthShell>
