@@ -154,12 +154,12 @@ const NewPassword = () => {
             </DialogDescription>
           </View>
 
-          <DialogFooter>
+          <DialogFooter className="w-full">
             <Button
-              className="bg-[#2563EB] rounded-[20px] h-14 w-full mt-6"
+              className="bg-[#2563EB] rounded-[20px] w-full mt-6 px-10"
               onPress={handleDialogContinue}
             >
-              <Text className="text-white font-medium text-base">Continue</Text>
+              <Text className="text-white font-medium text-base text-center">Continue</Text>
             </Button>
           </DialogFooter>
         </DialogContent>

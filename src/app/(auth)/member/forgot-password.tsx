@@ -38,7 +38,7 @@ const ForgotPassword = () => {
       if (error) {
         setFormError(error.message);
       } else {
-        router.push(`/(auth)/clinician/otp?flow=reset&email=${encodeURIComponent(data.email)}`);
+        router.push(`/(auth)/member/otp?flow=reset&email=${encodeURIComponent(data.email)}`);
       }
     } catch {
       setFormError("An unexpected error occurred. Please try again.");
@@ -48,7 +48,7 @@ const ForgotPassword = () => {
   };
 
   return (
-    <AuthShell showBackButton>
+    <AuthShell showBackButton role="member">
       <View className="w-full gap-6">
         {/* Header */}
         <View className="items-center gap-2">
@@ -94,7 +94,7 @@ const ForgotPassword = () => {
 
         {/* Button */}
         <Button
-          className="w-full rounded-2xl h-14 bg-[#2563EB]"
+          className="w-full rounded-2xl h-14 bg-[#DB2777]"
           disabled={isLoading}
           onPress={handleSubmit(onSubmit)}
         >

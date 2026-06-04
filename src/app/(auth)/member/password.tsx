@@ -77,12 +77,12 @@ const MemberPassword = () => {
             source={require("@/assets/images/logo-3.png")}
             className="mb-2"
           />
-          <Text className="text-2xl font-semibold">Clinician Portal</Text>
+          <Text className="text-2xl font-semibold">Member Portal</Text>
           <Text className="text-base text-gray-600 text-center">
-            Access the clinical decision support dashboard
+             Sign up to access the medical dashboard
           </Text>
           <View className="flex-row items-center">
-            <Text className="text-sm text-gray-600">Not a clinician? </Text>
+            <Text className="text-sm text-gray-600">Not a Member? </Text>
             <Button variant="link" className="-ml-4">
               <Text className="text-[#DB2777]">Switch role</Text>
             </Button>
@@ -165,8 +165,8 @@ const MemberPassword = () => {
         {/* Footer */}
         <View className="items-center gap-3 mt-2">
           <Text className="text-xs text-gray-400 text-center">
-            By signing up, you acknowledge that you are an authorized healthcare
-            professional with appropriate credentials.
+             By signing in, you confirm that the information you provide is
+            accurate and that you will use this platform responsibly.
           </Text>
         </View>
       </View>

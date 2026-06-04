@@ -7,6 +7,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { ArrowRight } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 
@@ -70,9 +71,13 @@ export default function RoleSelection() {
                   className="bg-[#2D5BE3] rounded-lg py-3 px-6 items-center"
                   onPress={() => router.replace("/(auth)/member/sign-in")}
                 >
-                  <Text className="text-white text-sm font-semibold">
-                    Continue as a Member →
-                  </Text>
+                  <View className="flex-row items-center">
+                    <Text className="text-white text-sm font-semibold">
+                      Continue as a Member{" "}
+                    </Text>
+
+                    <ArrowRight className="ml-1" color="white" />
+                  </View>
                 </Pressable>
               </View>
             </View>
@@ -97,9 +102,12 @@ export default function RoleSelection() {
                   className="mt-1 bg-[#DB2777] rounded-lg py-3 px-6 items-center"
                   onPress={() => router.replace("/(auth)/clinician/sign-in")}
                 >
-                  <Text className="text-white text-sm font-semibold">
-                    Continue as a clinician →
-                  </Text>
+                  <View className="flex-row items-center">
+                    <Text className="text-white text-sm font-semibold">
+                      Continue as a Clinician{" "}
+                    </Text>
+                    <ArrowRight className="ml-1" color="white" />
+                  </View>
                 </Pressable>
               </View>
             </View>

@@ -66,9 +66,9 @@ const MemberSignUp = () => {
             Sign up to access the medical dashboard
           </Text>
           <View className="flex-row items-center">
-            <Text className="text-sm text-gray-600">Not a clinician? </Text>
+            <Text className="text-sm text-gray-600">Not a Member? </Text>
             <Button variant="link" className="-ml-4" onPress={() => router.push('/onboarding/role-selection')}>
-              <Text className="text-blue-600">Switch role</Text>
+              <Text className="text-[#DB2777]">Switch role</Text>
             </Button>
           </View>
         </View>
@@ -177,14 +177,14 @@ const MemberSignUp = () => {
         <View className="items-center gap-3">
           <View className="flex-row items-center">
             <Text className="text-sm text-gray-600">Have an account? </Text>
-            <Button variant="link" className="-ml-4" onPress={() => router.push('/(auth)/clinician/sign-in')}>
-              <Text className="text-blue-600">Sign in</Text>
+            <Button variant="link" className="-ml-4" onPress={() => router.push('/(auth)/member/sign-in')}>
+              <Text className="text-[#DB2777]">Sign in</Text>
             </Button>
           </View>
 
           <Text className="text-xs text-gray-400 text-center">
-            By signing up, you acknowledge that you are an authorized healthcare
-            professional with appropriate credentials.
+           By signing in, you confirm that the information you provide is
+            accurate and that you will use this platform responsibly.
           </Text>
         </View>
       </View>

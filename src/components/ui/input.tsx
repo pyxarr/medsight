@@ -14,7 +14,7 @@ function Input({
       placeholderTextColor={placeholderTextColor}
       selectionColor={selectionColor}
       cursorColor={cursorColor}
-      style={[{ height: 56, color: "#111827" }, style]}
+      style={[{ height: 52, color: "#111827" }, style]}
       className={cn(
         "w-full rounded-[18px] border border-gray-300 bg-white px-4 text-base",
         props.editable === false && "opacity-50",

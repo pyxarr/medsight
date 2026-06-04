@@ -70,7 +70,7 @@ const MemberSignIn = () => {
 
   return (
     <AuthShell scrollRef={scrollRef} role="member">
-      <View className="w-full gap-6">
+      <View className="w-full gap-2">
         {/* Header */}
         <View className="items-center gap-1">
           <Image
@@ -78,17 +78,17 @@ const MemberSignIn = () => {
             className="mb-2"
           />
           <Text className="text-2xl font-semibold">Member Portal</Text>
-          <Text className="text-base text-gray-600 text-center">
-            Access your member dashboard
+          <Text className="text-base text-gray-600 text-center mt-2">
+            This section provides educational resources and community experiences.
           </Text>
           <View className="flex-row items-center">
-            <Text className="text-sm text-gray-600">Not a member? </Text>
+            <Text className="text-sm text-gray-600">Not a Member? </Text>
             <Button
               variant="link"
               className="-ml-4"
               onPress={() => router.push("/onboarding/role-selection")}
             >
-              <Text className="text-blue-600">Switch role</Text>
+              <Text className="text-[#DB2777]">Switch role</Text>
             </Button>
           </View>
         </View>
@@ -172,7 +172,7 @@ const MemberSignIn = () => {
             <View className="items-end">
               <Button
                 variant="link"
-                onPress={() => router.push("/(auth)/clinician/forgot-password")}
+                onPress={() => router.push("/(auth)/member/forgot-password")}
               >
                 <Text className="text-gray-400 text-sm">Forgot password?</Text>
               </Button>
@@ -193,7 +193,7 @@ const MemberSignIn = () => {
 
         {/* Sign In Button */}
         <Button
-          className="w-full rounded-2xl h-14 bg-[#EC4899]"
+          className="w-full rounded-2xl h-14 bg-[#EC4899] mb-4"
           disabled={isLoading}
           onPress={handleSubmit(onSubmit)}
         >
@@ -205,7 +205,7 @@ const MemberSignIn = () => {
         </Button>
 
         {/* Divider */}
-        <View className="flex-row items-center gap-3">
+        <View className="flex-row items-center gap-3 mb-4">
           <Separator className="flex-1 bg-[#9CA3AF]" />
           <Text className="text-sm text-[#6B7280]">Sign in with google</Text>
           <Separator className="flex-1 bg-[#9CA3AF]" />
@@ -232,14 +232,14 @@ const MemberSignIn = () => {
             <Button
               variant="link"
               className="-ml-4"
-              onPress={() => router.push("/(auth)/clinician/sign-up")}
+              onPress={() => router.push("/(auth)/member/sign-up")}
             >
-              <Text className="text-blue-600">Sign up</Text>
+              <Text className="text-[#DB2777]">Sign up</Text>
             </Button>
           </View>
           <Text className="text-xs text-gray-400 text-center">
-            By signing in, you acknowledge that you are an authorized healthcare
-            professional with appropriate credentials.
+            By signing in, you confirm that the information you provide is
+            accurate and that you will use this platform responsibly.
           </Text>
         </View>
       </View>
