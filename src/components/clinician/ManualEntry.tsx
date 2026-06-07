@@ -1,17 +1,21 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import { Modal, View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { submitManualAssessment } from "@/services/assessmentService";
 import { useAuthStore } from "@/store/authStore";
 import { useManualAssessmentStore } from "@/store/manualAssessmentStore";
+import { parseValidationErrors } from "@/lib/errors";
 
 export function ManualEntry() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState("");
   const { session } = useAuthStore();
   const { 
     firstName, 
     lastName, 
+    patientId, 
     clinicalData, 
     bloodData, 
     resetAssessment 
@@ -26,7 +30,8 @@ export function ManualEntry() {
 
       const handleSubmit = async () => {
         if (!session) {
-          Alert.alert("Error", "You must be logged in to submit an assessment.");
+          setErrorModalMessage("You must be logged in to submit an assessment.");
+          setShowErrorModal(true);
           return;
         }
 
@@ -37,6 +42,7 @@ export function ManualEntry() {
             last_name: lastName,
             clinical_data: clinicalData,
             blood_panel: isBloodFilled ? bloodData : undefined,
+            ...(patientId.trim() ? { patient_id: patientId.trim() } : {}),
           };
 
           const result = await submitManualAssessment(payload, session.access_token);
@@ -50,7 +56,13 @@ export function ManualEntry() {
             params: { data: JSON.stringify(result) } 
           });
         } catch (error: any) {
-          Alert.alert("Submission Failed", error.message || "An unexpected error occurred.");
+          if (__DEV__) console.error("Manual assessment submission error:", error);
+          setErrorModalMessage(
+            parseValidationErrors(error.message)
+              || error.message
+              || "An unexpected error occurred. Please try again.",
+          );
+          setShowErrorModal(true);
         } finally {
           setIsSubmitting(false);
         }
@@ -242,6 +254,31 @@ export function ManualEntry() {
           </Text>
         )}
       </TouchableOpacity>
+
+      <Modal
+        visible={showErrorModal}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setShowErrorModal(false)}
+      >
+        <View className="flex-1 items-center justify-center bg-black/50 px-8">
+          <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
+            <Text className="text-lg font-semibold text-gray-900 text-center mb-2">
+              Submission Failed
+            </Text>
+            <Text className="text-sm text-gray-500 text-center mb-6">
+              {errorModalMessage}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setShowErrorModal(false)}
+              className="rounded-xl bg-blue-600 py-3.5 items-center"
+            >
+              <Text className="font-semibold text-white">OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

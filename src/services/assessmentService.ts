@@ -5,6 +5,7 @@ export interface ManualAssessmentRequest {
   last_name: string;
   clinical_data: Record<string, any>;
   blood_panel?: Record<string, any>;
+  patient_id?: string;
 }
 
 export interface ManualAssessmentResponse {
@@ -180,9 +181,7 @@ export async function submitManualAssessment(
 
   if (!response.ok) {
     const errorBody = await response.text();
-    throw new Error(
-      `API request failed with status ${response.status}: ${errorBody}`
-    );
+    throw new Error(errorBody || "Something went wrong. Please try again.");
   }
 
   return response.json() as Promise<ManualAssessmentResponse>;
@@ -207,9 +206,7 @@ export async function getAssessment(
 
   if (!response.ok) {
     const errorBody = await response.text();
-    throw new Error(
-      `API request failed with status ${response.status}: ${errorBody}`
-    );
+    throw new Error(errorBody || "Something went wrong. Please try again.");
   }
 
   return response.json() as Promise<AssessmentDetailResponse>;
@@ -267,6 +264,33 @@ export async function deleteAssessment(
   }
 
   return response.json() as Promise<AssessmentDeleteResponse>;
+}
+
+/**
+ * Fetch the full assessment timeline for one patient by their medical record ID.
+ */
+export async function getPatientHistory(
+  patientId: string,
+  token: string,
+): Promise<AssessmentHistoryListResponse> {
+  const response = await fetch(
+    `${process.env.EXPO_PUBLIC_API_URL}/api/clinician/patients/${patientId}/history`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(
+      `API request failed with status ${response.status}: ${errorBody}`,
+    );
+  }
+
+  return response.json() as Promise<AssessmentHistoryListResponse>;
 }
 
 /**

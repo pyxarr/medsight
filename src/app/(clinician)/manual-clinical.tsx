@@ -48,8 +48,23 @@ function SelectionField<T extends string>({
   );
 }
 
+const CURRENT_YEAR_PREFIX = `P-${new Date().getFullYear()}-`;
+
 export default function ManualClinicalScreen() {
-  const { firstName, lastName, setPatientInfo, clinicalData, setClinicalData } = useManualAssessmentStore();
+  const { firstName, lastName, patientId, setPatientInfo, clinicalData, setClinicalData } = useManualAssessmentStore();
+
+  const patientSequence = patientId.startsWith(CURRENT_YEAR_PREFIX)
+    ? patientId.slice(CURRENT_YEAR_PREFIX.length)
+    : patientId;
+
+  const handlePatientIdChange = (text: string) => {
+    if (/^P-\d{4}-/i.test(text)) {
+      setPatientInfo({ patientId: text.toUpperCase() });
+      return;
+    }
+    const digits = text.replace(/[^\d]/g, "");
+    setPatientInfo({ patientId: digits ? `${CURRENT_YEAR_PREFIX}${digits}` : "" });
+  };
 
   const numericFields = [
     { key: "age", label: "Patient Age", placeholder: "e.g. 45" },
@@ -99,6 +114,21 @@ export default function ManualClinicalScreen() {
               value={lastName}
               onChangeText={(text) => setPatientInfo({ lastName: text })}
             />
+          </View>
+          <View style={{ gap: 8 }}>
+            <Text style={{ fontSize: 14, fontWeight: "500", color: "#6B7280" }}>Patient ID (optional)</Text>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Text style={{ fontSize: 16, color: "#9CA3AF", marginRight: -32, paddingLeft: 16, zIndex: 1 }}>
+                {CURRENT_YEAR_PREFIX}
+              </Text>
+              <Input
+                placeholder="001"
+                keyboardType="numeric"
+                value={patientSequence}
+                onChangeText={handlePatientIdChange}
+                style={{ paddingLeft: 80 }}
+              />
+            </View>
           </View>
         </View>
 

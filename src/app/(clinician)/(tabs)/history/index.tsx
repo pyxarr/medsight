@@ -228,6 +228,13 @@ export default function History() {
     });
   };
 
+  const handleViewTimeline = (patientId: string) => {
+    router.push({
+      pathname: "/(clinician)/patient-timeline/[id]",
+      params: { id: patientId },
+    });
+  };
+
   const handleBatchPress = (batchId: string) => {
     router.push({
       pathname: "/(clinician)/batch-results",
@@ -306,7 +313,7 @@ export default function History() {
         ) : isError ? (
           <View className="flex-1 items-center justify-center px-10">
             <Text className="text-gray-500 text-sm text-center">
-              {errorMessage || "History could not be loaded."}
+              History could not be loaded. Please try again.
             </Text>
           </View>
         ) : activeTab === "assessments" ? (
@@ -318,6 +325,7 @@ export default function History() {
                 item={item}
                 onDelete={() => handleAssessmentDelete(item.id)}
                 onExpand={() => handleAssessmentExpand(item.id)}
+                onViewTimeline={() => handleViewTimeline(item.patientId)}
               />
             )}
             showsVerticalScrollIndicator={false}

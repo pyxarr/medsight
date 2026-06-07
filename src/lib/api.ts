@@ -46,9 +46,7 @@ export async function fetchApi<TResponse>(
 
   if (!response.ok) {
     const errorBody = await response.text();
-    throw new Error(
-      `API request failed with status ${response.status}: ${errorBody}`
-    );
+    throw new Error(errorBody || "Something went wrong. Please try again.");
   }
 
   const parsedJson = (await response.json()) as TResponse;

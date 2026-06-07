@@ -124,8 +124,6 @@ export default function BatchResultsScreen() {
     batchHistoryQuery.isError || batchAssessmentQueries.some((query) => query.isError)
   );
 
-  const historyErrorMessage = batchHistoryQuery.error as Error | null;
-
   const data = parsedData ?? historyParsedData;
 
   if (!data) {
@@ -140,7 +138,7 @@ export default function BatchResultsScreen() {
           ) : isHistoryError ? (
             <>
               <Text className="text-gray-500 text-sm text-center">
-                {historyErrorMessage?.message || "Batch data could not be loaded."}
+                Batch data could not be loaded. Please try again.
               </Text>
               <TouchableOpacity
                 className="mt-4 bg-blue-600 px-6 py-3 rounded-md"

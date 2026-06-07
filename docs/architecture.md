@@ -58,6 +58,7 @@
 | `/(clinician)/(tabs)/community` | Complete | Community loading gate and nested stack. |
 | `/(clinician)/report/[id]` | Complete | Assessment detail report. |
 | `/(clinician)/batch-results` | Complete | Batch result view for fresh uploads and history. |
+| `/(clinician)/patient-timeline/[id]` | Complete | All assessments for one patient with delete and expand. |
 
 ### 4.4 Community Nested Tree
 | Route | Status | Notes |
@@ -88,7 +89,7 @@
 - `manualAssessmentStore` preserves entered values while the user moves between screens.
 
 ### Manual Assessment Screens
-- `manual-clinical.tsx` contains the required clinical fields and patient name fields.
+- `manual-clinical.tsx` contains the required clinical fields, patient name fields, and an optional Patient ID input with `P-{year}-` prefix label + numeric input.
 - `manual-blood.tsx` contains the optional blood biomarker fields.
 - The biopsy info card on `ManualEntry` is informational only and does not collect data.
 - Manual entry should remain aligned with the clinician API request shape.
@@ -106,7 +107,8 @@
 ### History
 - The history screen shows assessments and batches in separate modes.
 - It uses `FlatList` for long lists and pull-to-refresh for both tabs.
-- Assessment deletion is optimistic and updates query cache state.
+- Assessment deletion is optimistic and updates query cache state with a confirmation modal.
+- Each assessment card has a clock icon that navigates to the per-patient timeline screen.
 
 ### History Screen Details
 - Assessments show patient name, patient id, sample date, risk level, score, and confidence.
@@ -150,10 +152,11 @@
 - Services are the only place that should know the exact API path shape.
 
 ### Assessment Service Responsibilities
-- Build manual assessment payloads.
+- Build manual assessment payloads (including optional patient_id).
 - Submit batch uploads without rewriting the picked file.
 - Fetch assessment details by id.
 - Fetch assessment history by filters.
+- Fetch patient history (all assessments for one patient) for the timeline screen.
 - Fetch batch lists and batch assessments.
 - Delete assessments and surface API errors cleanly.
 
@@ -179,8 +182,9 @@
 - `ManualEntry` is the manual/batch landing surface.
 - `BatchUpload` handles file selection and submission.
 - `BatchResultRowCard` renders batch row outcomes.
-- `AssessmentCard` and `BatchCard` render history lists.
+- `AssessmentCard` and `BatchCard` render history lists; `AssessmentCard` has a delete confirmation modal and a clock icon for the patient timeline.
 - `HistorySearchBar` controls history filtering.
+- `PatientTimeline` screen renders all assessments for a single patient with delete and expand support.
 
 ### Report Components
 - `RiskSummaryCard`, `CrossDatasetAgreement`, `KeyContributingFactors`, `FeatureContributionChart`, `ConfidenceByDataset`, `OodWarningCard`, `SuggestedAction`, and `ReportDisclaimer` are used together to build the assessment detail page.
@@ -199,7 +203,9 @@
 4. The API result is routed straight to the report page for instant display.
 
 Manual flow details:
-- patient name is collected in the clinical screen and persisted in the shared store
+- patient name and optional patient ID are collected in the clinical screen and persisted in the shared store
+- the patient ID input shows the current year prefix (`P-2026-`) as a fixed label with a separate numeric input for the sequence
+- when a patient ID is provided, the backend links the assessment to that existing patient instead of creating a new one
 - the blood screen is optional and only contributes additional input when values exist
 - the report route receives the assessment result immediately so the user sees a populated detail page without waiting for a second fetch when possible
 
@@ -219,11 +225,13 @@ Batch flow details:
 1. History fetches list data through React Query.
 2. Report fetches the detailed assessment by id and caches it aggressively.
 3. Deletion invalidates the relevant assessment and batch-result queries.
+4. The patient timeline screen fetches all assessments for one patient via `getPatientHistory`.
 
 History flow details:
 - assessment history supports patient id, patient name, and risk level filtering
 - batches are filtered locally by filename and batch id fragments
 - pull-to-refresh should always be available on the active list
+- each assessment card can navigate to the per-patient timeline, which links assessments by patient_id
 
 ### Community
 1. The feed uses infinite scrolling.
@@ -248,6 +256,7 @@ Community flow details:
 - `src/lib/auth.ts` and `src/store/authStore.ts` work together to hydrate and expose the current session.
 - `src/lib/theme.ts` centralises the navigation theme.
 - `src/lib/validations/auth.ts` contains the auth form validation schemas.
+- `src/lib/errors.ts` contains `parseValidationErrors` — extracts missing field labels from FastAPI validation error JSON for user-facing messages.
 - `src/hooks/useCommunityRealtime.ts` subscribes to Supabase Realtime INSERT events on `community_posts` and prepends new posts to the feed cache.
 - `src/hooks/useOptimisticReactions.ts` keeps the community reaction UI responsive before the server confirms a change.
 - `src/components/DevSitemapFab.tsx` is a dev-only helper for route inspection.

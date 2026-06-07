@@ -10,9 +10,15 @@
 - Onboarding and role selection.
 - Clinician auth flow.
 - Manual assessment flow with persisted form state.
+- Manual assessment optional Patient ID input with `P-{year}-` prefix + numeric UX.
 - Batch upload and batch-results screens.
 - API-backed report view.
 - API-backed history list with refresh and delete.
+- Patient timeline screen with API-backed history, delete, and expand-to-report.
+- Delete confirmation modal on AssessmentCard.
+- User-friendly error messages across all assessment/batch/history screens.
+- Validation error parsing (`src/lib/errors.ts`) for FastAPI field validation errors.
+- Dev-only console logging gated behind `__DEV__`.
 - Community feed with Supabase Realtime live updates and scroll-to-top on new post.
 - Community search wired to API with debounced query and sectioned results.
 - Community post detail with reply composer and media attachment.

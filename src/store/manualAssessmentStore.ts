@@ -25,9 +25,10 @@ export interface BloodPanelData {
 interface AssessmentState {
   firstName: string;
   lastName: string;
+  patientId: string;
   clinicalData: Partial<ClinicalData>;
   bloodData: Partial<BloodPanelData>;
-  setPatientInfo: (info: { firstName?: string; lastName?: string }) => void;
+  setPatientInfo: (info: { firstName?: string; lastName?: string; patientId?: string }) => void;
   setClinicalData: (data: Partial<ClinicalData>) => void;
   setBloodData: (data: Partial<BloodPanelData>) => void;
   resetAssessment: () => void;
@@ -39,6 +40,7 @@ const initialBloodData: Partial<BloodPanelData> = {};
 export const useManualAssessmentStore = create<AssessmentState>((set) => ({
   firstName: "",
   lastName: "",
+  patientId: "",
   clinicalData: initialClinicalData,
   bloodData: initialBloodData,
 
@@ -46,6 +48,7 @@ export const useManualAssessmentStore = create<AssessmentState>((set) => ({
     set((state) => ({
       firstName: info.firstName ?? state.firstName,
       lastName: info.lastName ?? state.lastName,
+      patientId: info.patientId ?? state.patientId,
     })),
 
   setClinicalData: (data) =>
@@ -62,6 +65,7 @@ export const useManualAssessmentStore = create<AssessmentState>((set) => ({
     set({
       firstName: "",
       lastName: "",
+      patientId: "",
       clinicalData: initialClinicalData,
       bloodData: initialBloodData,
     }),

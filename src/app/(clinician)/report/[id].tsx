@@ -128,7 +128,7 @@ export default function ReportScreen() {
       <ClinicianShell>
         <View className="flex-1 items-center justify-center">
           <Text className="text-gray-400 text-sm">
-            {(error as Error)?.message || "Assessment not found."}
+            Assessment could not be loaded. Please try again.
           </Text>
         </View>
       </ClinicianShell>

@@ -7,6 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import { submitBatchAssessment } from "@/services/assessmentService";
 import { useAuthStore } from "@/store/authStore";
 import type { BatchAssessmentResponse } from "@/types/assessment";
+import { parseValidationErrors } from "@/lib/errors";
 
 export function BatchUpload() {
   const session = useAuthStore((state) => state.session);
@@ -25,7 +26,12 @@ export function BatchUpload() {
       });
     },
     onError: (error) => {
-      setErrorMessage(error.message);
+      if (__DEV__) console.error("Batch upload error:", error);
+      setErrorMessage(
+        parseValidationErrors(error.message)
+          || error.message
+          || "Upload failed. Please check your file and try again.",
+      );
     },
   });
 
