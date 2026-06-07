@@ -15,8 +15,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
+import { useMutation } from "@tanstack/react-query";
 import { ClinicianShell } from "@/components/ClinicianShell";
 import { createPost } from "@/services/communityService";
 import { useAuthStore } from "@/store/authStore";
@@ -41,7 +40,6 @@ function VideoPreview({ uri }: { uri: string }) {
 
 function CreatePost() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { session } = useAuthStore();
   const token = session?.access_token;
   const userAvatar = session?.user?.user_metadata?.avatar_url;
@@ -55,7 +53,6 @@ function CreatePost() {
       return await createPost({ content, file: selectedFile }, token);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["community-feed"] });
       router.back();
     },
     onError: (error) => {

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -9,15 +9,17 @@ import {
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { FlashList } from "@shopify/flash-list";
+import { FlashList, type FlashListRef } from "@shopify/flash-list";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { CommunityHeader } from "@/components/clinician/community/CommunityHeader";
 import { PostCard } from "@/components/clinician/community/PostCard";
 import { ClinicianShell } from "@/components/ClinicianShell";
+import { useCommunityRealtime } from "@/hooks/useCommunityRealtime";
 import { useOptimisticReactions } from "@/hooks/useOptimisticReactions";
 import { getFeed, getFollowingFeed } from "@/services/communityService";
 import { useAuthStore } from "@/store/authStore";
 import { useUIStore } from "@/store/uiStore";
+import type { CommunityPost } from "@/types/community";
 
 export default function CommunityFeed() {
   const router = useRouter();
@@ -27,11 +29,22 @@ export default function CommunityFeed() {
   const { session } = useAuthStore();
   const token = session?.access_token;
   const { setIsInCommunity } = useUIStore();
+  const hasMountedRef = useRef(false);
+  const flashListRef = useRef<FlashListRef<CommunityPost>>(null);
+
+  useCommunityRealtime(() => {
+    if (activeTab === "foryou") {
+      flashListRef.current?.scrollToIndex({ index: 0, animated: true });
+    }
+  });
 
   useFocusEffect(
     useCallback(() => {
       setIsInCommunity(true);
-      queryClient.invalidateQueries({ queryKey: ["community-feed"] });
+      if (!hasMountedRef.current) {
+        hasMountedRef.current = true;
+        queryClient.invalidateQueries({ queryKey: ["community-feed"] });
+      }
 
       return () => {
         setTimeout(() => setIsInCommunity(false), 300);
@@ -68,6 +81,7 @@ export default function CommunityFeed() {
       const currentOffset = allPages.length * 20;
       return lastPage.results.length < 20 ? undefined : currentOffset;
     },
+    staleTime: 1000 * 60 * 2,
     initialPageParam: 0,
   });
 
@@ -140,6 +154,7 @@ export default function CommunityFeed() {
   return (
     <ClinicianShell showHeader={false} scrollable={false}>
       <FlashList
+        ref={flashListRef}
         data={allPosts}
         showsVerticalScrollIndicator={false}
         keyExtractor={(item) => item?.id ?? Math.random().toString()}
