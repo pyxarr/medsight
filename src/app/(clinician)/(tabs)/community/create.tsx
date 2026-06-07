@@ -19,6 +19,7 @@ import { useMutation } from "@tanstack/react-query";
 import { ClinicianShell } from "@/components/ClinicianShell";
 import { createPost } from "@/services/communityService";
 import { useAuthStore } from "@/store/authStore";
+import type { MediaFile } from "@/types/community";
 
 /**
  * Separate component for Video Preview to handle the useVideoPlayer hook.
@@ -45,12 +46,12 @@ function CreatePost() {
   const userAvatar = session?.user?.user_metadata?.avatar_url;
 
   const [content, setContent] = useState("");
-  const [selectedFile, setSelectedFile] = useState<{ uri: string; name: string; mimeType: string } | null>(null);
+  const [selectedFile, setSelectedFile] = useState<MediaFile | null>(null);
 
   const createPostMutation = useMutation({
     mutationFn: async () => {
       if (!token) throw new Error("Unauthenticated");
-      return await createPost({ content, file: selectedFile }, token);
+      return await createPost({ content, file: selectedFile ?? undefined }, token);
     },
     onSuccess: () => {
       router.back();

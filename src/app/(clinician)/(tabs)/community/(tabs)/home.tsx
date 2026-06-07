@@ -82,6 +82,7 @@ export default function CommunityFeed() {
       return lastPage.results.length < 20 ? undefined : currentOffset;
     },
     staleTime: 1000 * 60 * 2,
+    refetchOnWindowFocus: false,
     initialPageParam: 0,
   });
 

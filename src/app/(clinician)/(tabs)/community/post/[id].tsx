@@ -22,6 +22,7 @@ import { ClinicianShell } from "@/components/ClinicianShell";
 import { useOptimisticReactions } from "@/hooks/useOptimisticReactions";
 import { getPostDetail, createReply } from "@/services/communityService";
 import { useAuthStore } from "@/store/authStore";
+import type { MediaFile } from "@/types/community";
 
 export default function PostDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -44,7 +45,7 @@ export default function PostDetail() {
   } = useOptimisticReactions({ token });
 
   const [replyContent, setReplyContent] = useState("");
-  const [selectedFile, setSelectedFile] = useState<{ uri: string; name: string; mimeType: string } | null>(null);
+  const [selectedFile, setSelectedFile] = useState<MediaFile | null>(null);
 
   const { 
     data: detailData, 
@@ -68,11 +69,9 @@ export default function PostDetail() {
   const replyMutation = useMutation({
     mutationFn: async () => {
       if (!token) throw new Error("Unauthenticated");
-      console.log("[Reply] Selected file:", JSON.stringify(selectedFile));
-      return await createReply({ post_id: id, content: replyContent, file: selectedFile }, token);
+      return await createReply({ post_id: id, content: replyContent, file: selectedFile ?? undefined }, token);
     },
-    onSuccess: (data) => {
-      console.log("[Reply] Created reply:", JSON.stringify(data));
+    onSuccess: () => {
       setReplyContent("");
       setSelectedFile(null);
       queryClient.invalidateQueries({ queryKey: ["post-detail", id] });
@@ -162,7 +161,7 @@ export default function PostDetail() {
           <View className="mt-2">
             <View className="px-5 mb-3">
               <Text className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
-                Replies ({detailData?.reaction_counts.reply_count || 0})
+                Replies ({detailData?.replies.length ?? 0})
               </Text>
             </View>
             

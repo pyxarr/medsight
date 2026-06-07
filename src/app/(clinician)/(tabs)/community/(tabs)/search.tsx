@@ -75,6 +75,7 @@ export default function CommunitySearch() {
                 </TouchableOpacity>
               )}
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
             />
           </View>
         )}
@@ -85,11 +86,12 @@ export default function CommunitySearch() {
           </View>
         )}
 
-        {query.trim().length >= 1 && !isLoading && (
+        {query.trim().length >= 1 && !isLoading && data && (
           <FlatList
             data={listItems}
             keyExtractor={(item, index) => `${item.type}-${index}`}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ paddingBottom: 20 }}
             ListEmptyComponent={
               <View className="flex-1 items-center justify-center pt-20">

@@ -66,13 +66,19 @@ export interface PostDetailResponse {
   replies: CommunityReply[];
 }
 
+export interface MediaFile {
+  uri: string;
+  name: string;
+  mimeType: string;
+}
+
 export interface CreatePostRequest {
   content: string;
-  file?: any; // FormData file
+  file?: MediaFile;
 }
 
 export interface CreateReplyRequest {
   post_id: string;
   content: string;
-  file?: any; // FormData file
+  file?: MediaFile;
 }
