@@ -68,7 +68,7 @@
 | `/(clinician)/(tabs)/community/(tabs)/notifications` | Complete | Notifications tab. |
 | `/(clinician)/(tabs)/community/profile/[id]` | Complete | Community profile detail. |
 | `/(clinician)/(tabs)/community/post/[id]` | Complete | Community post detail. |
-| `/(clinician)/(tabs)/community/bookmark/[id]` | Complete | Saved posts and bookmarks. |
+| `/(clinician)/(tabs)/community/bookmark/[id]` | Complete | API-backed bookmarks list with infinite scroll. |
 | `/(clinician)/(tabs)/community/create` | Complete | Post composer. |
 
 ## 5. Screen Layers

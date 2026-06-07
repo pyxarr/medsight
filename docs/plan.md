@@ -17,12 +17,12 @@
 - Community search wired to API with debounced query and sectioned results.
 - Community post detail with reply composer and media attachment.
 - Community create post with image/video picker and media upload.
+- Community bookmarks screen with infinite scroll and consistent toggle behaviour.
 
 ### Delivered but Partial
 - Profile screen layout (static content, not API-backed).
 - Member auth route set (post-auth shell not implemented).
 - Community chat and notifications tabs (scaffolded, not wired).
-- Community bookmarks screen.
 - Community profile detail screen.
 
 ### Still Missing
