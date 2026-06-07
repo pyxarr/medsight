@@ -2,8 +2,10 @@ import { create } from "zustand";
 
 interface OptimisticState {
   isLiked: boolean;
+  isReposted: boolean;
   isBookmarked: boolean;
   likeCount: number;
+  repostCount: number;
   bookmarkCount: number;
 }
 

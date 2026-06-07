@@ -112,8 +112,8 @@ export async function getBookmarks(limit = 20, offset = 0, token?: string): Prom
   });
 }
 
-export async function deletePost(postId: string, token: string): Promise<{ success: boolean }> {
-  return fetchApi<{ success: boolean }>(`/api/community/posts/${postId}`, {
+export async function deletePost(postId: string, token: string): Promise<void> {
+  return fetchApi<void>(`/api/community/posts/${postId}`, {
     method: "DELETE",
     token,
   });

@@ -24,6 +24,9 @@
 - Community post detail with reply composer and media attachment.
 - Community create post with image/video picker and media upload.
 - Community bookmarks screen with infinite scroll and consistent toggle behaviour.
+- Community repost reaction wired end-to-end (service, hook, PostCard, CommentItem, all screens) with optimistic state.
+- Community delete post with three-dot dropdown (author only), styled confirmation modal, and feed/bookmark cache invalidation.
+- Bookmark cache sync (`updateBookmarkCache`) ensures like/repost/bookmark reactions persist in the bookmark list across all mutation types.
 
 ### Delivered but Partial
 - Profile screen layout (static content, not API-backed).

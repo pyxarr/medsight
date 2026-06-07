@@ -7,23 +7,32 @@ import type { CommunityPost } from "@/types/community";
 interface CommentItemProps {
   post: CommunityPost;
   onLike?: () => void;
+  onRepost?: () => void;
   onBookmark?: () => void;
   isLikedOverride?: boolean;
+  isRepostedOverride?: boolean;
   isBookmarkedOverride?: boolean;
   likeCountOverride?: number;
+  repostCountOverride?: number;
+  bookmarkCountOverride?: number;
 }
 
 export function CommentItem({
   post,
   onLike,
+  onRepost,
   onBookmark,
   isLikedOverride,
+  isRepostedOverride,
   isBookmarkedOverride,
   likeCountOverride,
+  repostCountOverride,
 }: CommentItemProps) {
   const isLiked = isLikedOverride ?? post.reaction_counts.is_liked;
+  const isReposted = isRepostedOverride ?? post.reaction_counts.is_reposted;
   const isBookmarked = isBookmarkedOverride ?? post.reaction_counts.is_bookmarked;
   const likeCount = likeCountOverride ?? post.reaction_counts.like_count;
+  const repostCount = repostCountOverride ?? post.reaction_counts.repost_count;
 
   return (
     <View className="px-5 py-3 border-b border-gray-100">
@@ -84,9 +93,15 @@ export function CommentItem({
           <Text className="text-xs text-gray-500">{post.reaction_counts.reply_count}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity className="flex-row items-center gap-1.5" activeOpacity={0.7}>
-          <Ionicons name="repeat-outline" size={16} color="#6B7280" />
-          <Text className="text-xs text-gray-500">{post.reaction_counts.repost_count}</Text>
+        <TouchableOpacity className="flex-row items-center gap-1.5" activeOpacity={0.7} onPress={() => onRepost?.()}>
+          <Ionicons
+            name="repeat-outline"
+            size={16}
+            color={isReposted ? "#2563EB" : "#6B7280"}
+          />
+          <Text className={`text-xs ${isReposted ? "text-blue-600" : "text-gray-500"}`}>
+            {repostCount}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity activeOpacity={0.7} onPress={() => onBookmark?.()}>

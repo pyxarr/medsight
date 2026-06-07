@@ -1,13 +1,13 @@
-import React from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator, RefreshControl } from "react-native";
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, ActivityIndicator, RefreshControl, Modal } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PostCard } from "@/components/clinician/community/PostCard";
 import { ClinicianShell } from "@/components/ClinicianShell";
 import { useOptimisticReactions } from "@/hooks/useOptimisticReactions"
-import { getBookmarks } from "@/services/communityService";
+import { getBookmarks, deletePost } from "@/services/communityService";
 import { useAuthStore } from "@/store/authStore";
 import type { CommunityPost, FeedResponse } from "@/types/community";
 
@@ -24,15 +24,33 @@ import type { CommunityPost, FeedResponse } from "@/types/community";
  */
 export default function BookmarksScreen() {
   const { id: _userId } = useLocalSearchParams<{ id: string }>();
+  const queryClient = useQueryClient();
   const { session } = useAuthStore();
   const token = session?.access_token;
   const {
     handleLike,
     handleBookmark,
+    handleRepost,
     getIsLiked,
+    getIsReposted,
     getIsBookmarked,
     getLikeCount,
+    getRepostCount,
+    getBookmarkCount,
   } = useOptimisticReactions({ token });
+
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
+
+  const deleteMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      if (!token) throw new Error("Unauthenticated");
+      return await deletePost(postId, token);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["community", "bookmarks"] });
+      queryClient.invalidateQueries({ queryKey: ["community-feed"] });
+    },
+  });
 
   const {
     data,
@@ -121,6 +139,19 @@ export default function BookmarksScreen() {
                     item.id,
                     item.reaction_counts.is_liked,
                     item.reaction_counts.like_count,
+                    item.reaction_counts.is_reposted,
+                    item.reaction_counts.repost_count,
+                    item.reaction_counts.is_bookmarked,
+                    item.reaction_counts.bookmark_count,
+                  )
+                }
+                onRepost={() =>
+                  handleRepost(
+                    item.id,
+                    item.reaction_counts.is_reposted,
+                    item.reaction_counts.repost_count,
+                    item.reaction_counts.is_liked,
+                    item.reaction_counts.like_count,
                     item.reaction_counts.is_bookmarked,
                     item.reaction_counts.bookmark_count,
                   )
@@ -132,11 +163,19 @@ export default function BookmarksScreen() {
                     item.reaction_counts.bookmark_count,
                     item.reaction_counts.is_liked,
                     item.reaction_counts.like_count,
+                    item.reaction_counts.is_reposted,
+                    item.reaction_counts.repost_count,
                   )
                 }
+                onDelete={() => setDeletingPostId(item.id)}
+                isAuthor={session?.user?.id === item.author.id}
                 isLikedOverride={getIsLiked(
                   item.id,
                   item.reaction_counts.is_liked,
+                )}
+                isRepostedOverride={getIsReposted(
+                  item.id,
+                  item.reaction_counts.is_reposted,
                 )}
                 isBookmarkedOverride={getIsBookmarked(
                   item.id,
@@ -145,6 +184,14 @@ export default function BookmarksScreen() {
                 likeCountOverride={getLikeCount(
                   item.id,
                   item.reaction_counts.like_count,
+                )}
+                repostCountOverride={getRepostCount(
+                  item.id,
+                  item.reaction_counts.repost_count,
+                )}
+                bookmarkCountOverride={getBookmarkCount(
+                  item.id,
+                  item.reaction_counts.bookmark_count,
                 )}
               />
             )}
@@ -164,6 +211,43 @@ export default function BookmarksScreen() {
           />
         )}
       </View>
+
+      {/* Delete confirmation modal */}
+      <Modal
+        visible={deletingPostId !== null}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setDeletingPostId(null)}
+      >
+        <View className="flex-1 items-center justify-center bg-black/50 px-8">
+          <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
+            <Text className="text-lg font-semibold text-gray-900 text-center mb-2">
+              Delete post
+            </Text>
+            <Text className="text-sm text-gray-500 text-center mb-6">
+              Are you sure you want to delete this post? This action cannot be undone.
+            </Text>
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                onPress={() => setDeletingPostId(null)}
+                className="flex-1 rounded-xl border border-gray-300 py-3.5 items-center"
+              >
+                <Text className="font-semibold text-gray-700">Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  if (deletingPostId) deleteMutation.mutate(deletingPostId);
+                  setDeletingPostId(null);
+                }}
+                className="flex-1 rounded-xl bg-red-500 py-3.5 items-center"
+              >
+                <Text className="font-semibold text-white">Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ClinicianShell>
   );
 }

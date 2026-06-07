@@ -10,9 +10,10 @@ import {
   Platform,
   RefreshControl,
   Image,
+  Modal,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { useLocalSearchParams, useFocusEffect } from "expo-router";
+import { useLocalSearchParams, useFocusEffect, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -20,12 +21,13 @@ import { CommentItem } from "@/components/clinician/community/CommentItem";
 import { PostCard } from "@/components/clinician/community/PostCard";
 import { ClinicianShell } from "@/components/ClinicianShell";
 import { useOptimisticReactions } from "@/hooks/useOptimisticReactions";
-import { getPostDetail, createReply } from "@/services/communityService";
+import { getPostDetail, createReply, deletePost } from "@/services/communityService";
 import { useAuthStore } from "@/store/authStore";
 import type { MediaFile } from "@/types/community";
 
 export default function PostDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { session } = useAuthStore();
   const token = session?.access_token;
@@ -39,10 +41,32 @@ export default function PostDetail() {
   const {
     handleLike,
     handleBookmark,
+    handleRepost,
     getIsLiked,
+    getIsReposted,
     getIsBookmarked,
     getLikeCount,
+    getRepostCount,
+    getBookmarkCount,
   } = useOptimisticReactions({ token });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!token) throw new Error("Unauthenticated");
+      return await deletePost(id, token);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["community-feed"] });
+      queryClient.invalidateQueries({ queryKey: ["community-feed", "following"] });
+      router.back();
+    },
+  });
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const handleDelete = () => {
+    setShowDeleteModal(true);
+  };
 
   const [replyContent, setReplyContent] = useState("");
   const [selectedFile, setSelectedFile] = useState<MediaFile | null>(null);
@@ -148,12 +172,18 @@ export default function PostDetail() {
           <View className="px-2 pb-2">
             {detailData && (
               <PostCard 
-                post={detailData} 
-                onLike={() => handleLike(id, detailData.reaction_counts.is_liked, detailData.reaction_counts.like_count, detailData.reaction_counts.is_bookmarked, detailData.reaction_counts.bookmark_count)}
-                onBookmark={() => handleBookmark(id, detailData.reaction_counts.is_bookmarked, detailData.reaction_counts.bookmark_count, detailData.reaction_counts.is_liked, detailData.reaction_counts.like_count)}
+                post={detailData}
+                onLike={() => handleLike(id, detailData.reaction_counts.is_liked, detailData.reaction_counts.like_count, detailData.reaction_counts.is_reposted, detailData.reaction_counts.repost_count, detailData.reaction_counts.is_bookmarked, detailData.reaction_counts.bookmark_count)}
+                onRepost={() => handleRepost(id, detailData.reaction_counts.is_reposted, detailData.reaction_counts.repost_count, detailData.reaction_counts.is_liked, detailData.reaction_counts.like_count, detailData.reaction_counts.is_bookmarked, detailData.reaction_counts.bookmark_count)}
+                onBookmark={() => handleBookmark(id, detailData.reaction_counts.is_bookmarked, detailData.reaction_counts.bookmark_count, detailData.reaction_counts.is_liked, detailData.reaction_counts.like_count, detailData.reaction_counts.is_reposted, detailData.reaction_counts.repost_count)}
+                onDelete={handleDelete}
+                isAuthor={session?.user?.id === detailData.author.id}
                 isLikedOverride={getIsLiked(id, detailData.reaction_counts.is_liked)}
+                isRepostedOverride={getIsReposted(id, detailData.reaction_counts.is_reposted)}
                 isBookmarkedOverride={getIsBookmarked(id, detailData.reaction_counts.is_bookmarked)}
                 likeCountOverride={getLikeCount(id, detailData.reaction_counts.like_count)}
+                repostCountOverride={getRepostCount(id, detailData.reaction_counts.repost_count)}
+                bookmarkCountOverride={getBookmarkCount(id, detailData.reaction_counts.bookmark_count)}
               />
             )}
           </View>
@@ -169,11 +199,15 @@ export default function PostDetail() {
               <CommentItem 
                 key={reply.id} 
                 post={reply} 
-                onLike={() => handleLike(reply.id, reply.reaction_counts.is_liked, reply.reaction_counts.like_count, reply.reaction_counts.is_bookmarked, reply.reaction_counts.bookmark_count)}
-                onBookmark={() => handleBookmark(reply.id, reply.reaction_counts.is_bookmarked, reply.reaction_counts.bookmark_count, reply.reaction_counts.is_liked, reply.reaction_counts.like_count)}
+                onLike={() => handleLike(reply.id, reply.reaction_counts.is_liked, reply.reaction_counts.like_count, reply.reaction_counts.is_reposted, reply.reaction_counts.repost_count, reply.reaction_counts.is_bookmarked, reply.reaction_counts.bookmark_count)}
+                onRepost={() => handleRepost(reply.id, reply.reaction_counts.is_reposted, reply.reaction_counts.repost_count, reply.reaction_counts.is_liked, reply.reaction_counts.like_count, reply.reaction_counts.is_bookmarked, reply.reaction_counts.bookmark_count)}
+                onBookmark={() => handleBookmark(reply.id, reply.reaction_counts.is_bookmarked, reply.reaction_counts.bookmark_count, reply.reaction_counts.is_liked, reply.reaction_counts.like_count, reply.reaction_counts.is_reposted, reply.reaction_counts.repost_count)}
                 isLikedOverride={getIsLiked(reply.id, reply.reaction_counts.is_liked)}
+                isRepostedOverride={getIsReposted(reply.id, reply.reaction_counts.is_reposted)}
                 isBookmarkedOverride={getIsBookmarked(reply.id, reply.reaction_counts.is_bookmarked)}
                 likeCountOverride={getLikeCount(reply.id, reply.reaction_counts.like_count)}
+                repostCountOverride={getRepostCount(reply.id, reply.reaction_counts.repost_count)}
+                bookmarkCountOverride={getBookmarkCount(reply.id, reply.reaction_counts.bookmark_count)}
               />
             ))}
           </View>
@@ -232,7 +266,43 @@ export default function PostDetail() {
             {replyMutation.isPending && <ActivityIndicator size="small" color="#fff" style={{ position: 'absolute', top: 8, left: 8 }} />}
           </TouchableOpacity>
         </View>
-      </KeyboardAvoidingView>
-    </ClinicianShell>
-  );
-}
+        </KeyboardAvoidingView>
+
+        <Modal
+          visible={showDeleteModal}
+          transparent
+          animationType="fade"
+          statusBarTranslucent
+          onRequestClose={() => setShowDeleteModal(false)}
+        >
+          <View className="flex-1 items-center justify-center bg-black/50 px-8">
+            <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
+              <Text className="text-lg font-semibold text-gray-900 text-center mb-2">
+                Delete post
+              </Text>
+              <Text className="text-sm text-gray-500 text-center mb-6">
+                Are you sure you want to delete this post? This action cannot be undone.
+              </Text>
+              <View className="flex-row gap-3">
+                <TouchableOpacity
+                  onPress={() => setShowDeleteModal(false)}
+                  className="flex-1 rounded-xl border border-gray-300 py-3.5 items-center"
+                >
+                  <Text className="font-semibold text-gray-700">Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowDeleteModal(false);
+                    deleteMutation.mutate();
+                  }}
+                  className="flex-1 rounded-xl bg-red-500 py-3.5 items-center"
+                >
+                  <Text className="font-semibold text-white">Delete</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </ClinicianShell>
+    );
+  }

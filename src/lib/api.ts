@@ -44,6 +44,10 @@ export async function fetchApi<TResponse>(
     body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
   });
 
+  if (response.status === 204) {
+    return undefined as TResponse;
+  }
+
   if (!response.ok) {
     const errorBody = await response.text();
     throw new Error(errorBody || "Something went wrong. Please try again.");

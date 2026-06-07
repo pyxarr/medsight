@@ -67,9 +67,9 @@
 | `/(clinician)/(tabs)/community/(tabs)/search` | Complete | Search screen. |
 | `/(clinician)/(tabs)/community/(tabs)/chat` | Complete | Chat tab. |
 | `/(clinician)/(tabs)/community/(tabs)/notifications` | Complete | Notifications tab. |
-| `/(clinician)/(tabs)/community/profile/[id]` | Complete | Community profile detail. |
-| `/(clinician)/(tabs)/community/post/[id]` | Complete | Community post detail. |
-| `/(clinician)/(tabs)/community/bookmark/[id]` | Complete | API-backed bookmarks list with infinite scroll. |
+| `/(clinician)/(tabs)/community/profile/[id]` | Partial | Community profile detail — mock data, follow/unfollow not API-backed. |
+| `/(clinician)/(tabs)/community/post/[id]` | Complete | Community post detail with repost, delete (three-dot dropdown → confirmation modal), and reply composer. |
+| `/(clinician)/(tabs)/community/bookmark/[id]` | Complete | API-backed bookmarks list with infinite scroll and consistent reaction toggling via `updateBookmarkCache`. |
 | `/(clinician)/(tabs)/community/create` | Complete | Post composer. |
 
 ## 5. Screen Layers
@@ -191,6 +191,8 @@
 
 ### Community Components
 - `CommunityHeader`, `PostCard`, `ChatItem`, `CommentItem`, `CommunitySearchBar`, and `CommunityLoadingScreen` make up the social surface.
+- `PostCard` supports like, repost, bookmark, and author-only delete via a three-dot dropdown menu with styled confirmation modal.
+- `CommentItem` supports like, repost, and bookmark with the same optimistic override pattern as `PostCard`.
 
 ### Profile Components
 - `ProfileHeader`, `ProfileRow`, and `ProfileSection` make up the profile layout.
@@ -241,6 +243,9 @@ History flow details:
 Community flow details:
 - `useFocusEffect` is used to refresh community state when the community screens gain focus
 - optimistic reactions must be reconciled with query invalidation after the mutation settles
+- repost uses the same `toggleReaction` service function as like, with its own mutation and optimistic state fields (`isReposted`, `repostCount`)
+- delete post uses a three-dot dropdown (`ellipsis-vertical`) visible only to the post author, followed by a styled confirmation modal — on confirm, the mutation fires and relevant feed/bookmark query keys are invalidated
+- `updateBookmarkCache` is called in all three mutation `onSuccess` handlers (like, repost, bookmark) so reactions persist immediately in the bookmark list without waiting for a refetch
 - nested community views should preserve back navigation within the community stack
 
 ## 10. Design Language
@@ -258,7 +263,7 @@ Community flow details:
 - `src/lib/validations/auth.ts` contains the auth form validation schemas.
 - `src/lib/errors.ts` contains `parseValidationErrors` — extracts missing field labels from FastAPI validation error JSON for user-facing messages.
 - `src/hooks/useCommunityRealtime.ts` subscribes to Supabase Realtime INSERT events on `community_posts` and prepends new posts to the feed cache.
-- `src/hooks/useOptimisticReactions.ts` keeps the community reaction UI responsive before the server confirms a change.
+- `src/hooks/useOptimisticReactions.ts` keeps the community reaction UI responsive before the server confirms a change. Covers like, repost, and bookmark with optimistic state merges and direct cache updates (`updateFeedCache`, `updateBookmarkCache`, `updatePostDetailCache`).
 - `src/components/DevSitemapFab.tsx` is a dev-only helper for route inspection.
 - `global.css` loads the shared NativeWind base styling.
 - `src/components/clinician/community/CommunityLoadingScreen.tsx` controls the community loading transition.
@@ -271,6 +276,8 @@ Community flow details:
 - Member post-auth screens are not implemented.
 - Profile content is still static.
 - Community chat and notifications tabs are scaffolded but not API-backed.
+- Community follow/unfollow uses mock toggle, not real API calls.
+- Community profile data uses mock posts and user data.
 
 ## 13. Stability Notes
 - The batch results page and report page now depend on stable route params rather than ad hoc screen state.
