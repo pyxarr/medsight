@@ -9,8 +9,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
+  Image,
 } from "react-native";
-import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -67,22 +68,33 @@ export default function PostDetail() {
   const replyMutation = useMutation({
     mutationFn: async () => {
       if (!token) throw new Error("Unauthenticated");
+      console.log("[Reply] Selected file:", JSON.stringify(selectedFile));
       return await createReply({ post_id: id, content: replyContent, file: selectedFile }, token);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("[Reply] Created reply:", JSON.stringify(data));
       setReplyContent("");
       setSelectedFile(null);
       queryClient.invalidateQueries({ queryKey: ["post-detail", id] });
     },
   });
 
-  const handlePickDocument = async () => {
-    const result = await DocumentPicker.getDocumentAsync({ type: "*/*" });
-    if (!result.canceled) {
+  const handlePickMedia = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images", "videos"],
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      const asset = result.assets[0];
       setSelectedFile({
-        uri: result.assets[0].uri,
-        name: result.assets[0].name,
-        mimeType: result.assets[0].mimeType || "application/octet-stream",
+        uri: asset.uri,
+        name: asset.fileName || `media_${Date.now()}`,
+        mimeType: asset.mimeType || "image/jpeg",
       });
     }
   };
@@ -134,7 +146,7 @@ export default function PostDetail() {
             <Text className="text-2xl text-center font-semibold text-gray-900">Post</Text>
           </View>
 
-          <View className="px-5 pb-2">
+          <View className="px-2 pb-2">
             {detailData && (
               <PostCard 
                 post={detailData} 
@@ -168,10 +180,29 @@ export default function PostDetail() {
           </View>
         </ScrollView>
 
+        {/* Media Preview */}
+        {selectedFile && (
+          <View className="px-4 pb-2">
+            <View className="relative">
+              <Image
+                source={{ uri: selectedFile.uri }}
+                className="w-24 h-24 rounded-xl"
+                resizeMode="cover"
+              />
+              <TouchableOpacity
+                onPress={() => setSelectedFile(null)}
+                className="absolute top-1 right-1 bg-black/50 rounded-full p-1"
+              >
+                <Ionicons name="close" size={14} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         {/* Reply Footer */}
         <View className="px-4 py-3 bg-white border-t border-gray-200 flex-row items-end gap-2">
           <TouchableOpacity 
-            onPress={handlePickDocument} 
+            onPress={handlePickMedia} 
             className={`p-2 rounded-full ${selectedFile ? "bg-blue-100" : "bg-gray-100"}`}
           >
             <Ionicons 

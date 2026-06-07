@@ -1,3 +1,4 @@
+import { File } from "expo-file-system";
 import { fetchApi } from "@/lib/api";
 import type {
   CommunityPost,
@@ -40,11 +41,8 @@ export async function createPost(data: CreatePostRequest, token: string): Promis
   const formData = new FormData();
   formData.append("content", data.content);
   if (data.file) {
-    formData.append("file", {
-      uri: data.file.uri,
-      name: data.file.name,
-      type: data.file.mimeType,
-    } as any);
+    const fileObj = new File(data.file.uri);
+    formData.append("file", fileObj);
   }
 
   return fetchApi<CommunityPost>(`/api/community/posts`, {
@@ -58,11 +56,8 @@ export async function createReply(data: CreateReplyRequest, token: string): Prom
   const formData = new FormData();
   formData.append("content", data.content);
   if (data.file) {
-    formData.append("file", {
-      uri: data.file.uri,
-      name: data.file.name,
-      type: data.file.mimeType,
-    } as any);
+    const fileObj = new File(data.file.uri);
+    formData.append("file", fileObj);
   }
 
   return fetchApi<CommunityPost>(`/api/community/posts/${data.post_id}/replies`, {
