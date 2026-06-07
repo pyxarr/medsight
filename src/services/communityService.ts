@@ -99,7 +99,7 @@ export async function unfollowUser(userId: string, token: string): Promise<{ fol
 export async function searchCommunity(query: string, limit = 20, token?: string): Promise<SearchResponse> {
   return fetchApi<SearchResponse>(`/api/community/search`, {
     method: "GET",
-    params: { query, limit },
+    params: { q: query, limit },
     token,
   });
 }
