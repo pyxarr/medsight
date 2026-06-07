@@ -34,6 +34,13 @@ export default function CommunityLayout() {
             animationDuration: 200,
           }}
         />
+        <Stack.Screen
+          name="bookmark/[id]"
+          options={{
+            animation: "slide_from_right",
+            animationDuration: 200,
+          }}
+        />
       </Stack>
     </View>
   );

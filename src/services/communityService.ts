@@ -75,8 +75,8 @@ export async function toggleReaction(postId: string, reactionType: "like" | "rep
   });
 }
 
-export async function toggleBookmark(postId: string, token: string): Promise<{ is_bookmarked: boolean }> {
-  return fetchApi<{ is_bookmarked: boolean }>(`/api/community/posts/${postId}/bookmark`, {
+export async function toggleBookmark(postId: string, token: string): Promise<ReactionToggleResponse> {
+  return fetchApi<ReactionToggleResponse>(`/api/community/posts/${postId}/bookmark`, {
     method: "POST",
     token,
   });

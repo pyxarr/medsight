@@ -73,20 +73,14 @@ export function useOptimisticReactions({ token }: UseOptimisticReactionsOptions)
       return await toggleBookmark(postId, token);
     },
     onSuccess: (data, postId) => {
-      const reactionToggle: ReactionToggleResponse = {
-        like_count: 0,
-        repost_count: 0,
-        bookmark_count: 0,
-        is_liked: false,
-        is_reposted: false,
-        is_bookmarked: data.is_bookmarked,
-      };
-      updateFeedCache(postId, reactionToggle);
-      updatePostDetailCache(postId, reactionToggle);
+      updateFeedCache(postId, data);
+      updatePostDetailCache(postId, data);
       queryClient.invalidateQueries({ queryKey: ["post-detail"] });
+      queryClient.invalidateQueries({ queryKey: ["community", "bookmarks"] });
       removeOptimisticState(postId);
     },
     onError: (_err, postId) => {
+      queryClient.invalidateQueries({ queryKey: ["community", "bookmarks"] });
       removeOptimisticState(postId);
     },
   });
