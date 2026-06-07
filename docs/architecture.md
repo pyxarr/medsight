@@ -248,6 +248,7 @@ Community flow details:
 - `src/lib/auth.ts` and `src/store/authStore.ts` work together to hydrate and expose the current session.
 - `src/lib/theme.ts` centralises the navigation theme.
 - `src/lib/validations/auth.ts` contains the auth form validation schemas.
+- `src/hooks/useCommunityRealtime.ts` subscribes to Supabase Realtime INSERT events on `community_posts` and prepends new posts to the feed cache.
 - `src/hooks/useOptimisticReactions.ts` keeps the community reaction UI responsive before the server confirms a change.
 - `src/components/DevSitemapFab.tsx` is a dev-only helper for route inspection.
 - `global.css` loads the shared NativeWind base styling.
@@ -260,7 +261,7 @@ Community flow details:
 ## 12. Current Gaps
 - Member post-auth screens are not implemented.
 - Profile content is still static.
-- Some community and profile actions are placeholders rather than fully connected product actions.
+- Community chat and notifications tabs are scaffolded but not API-backed.
 
 ## 13. Stability Notes
 - The batch results page and report page now depend on stable route params rather than ad hoc screen state.

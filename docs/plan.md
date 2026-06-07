@@ -13,17 +13,23 @@
 - Batch upload and batch-results screens.
 - API-backed report view.
 - API-backed history list with refresh and delete.
-- Community feed and nested community routes.
+- Community feed with Supabase Realtime live updates and scroll-to-top on new post.
+- Community search wired to API with debounced query and sectioned results.
+- Community post detail with reply composer and media attachment.
+- Community create post with image/video picker and media upload.
 
 ### Delivered but Partial
-- Profile screen layout.
-- Member auth route set.
-- Some community details and account surfaces.
+- Profile screen layout (static content, not API-backed).
+- Member auth route set (post-auth shell not implemented).
+- Community chat and notifications tabs (scaffolded, not wired).
+- Community bookmarks screen.
+- Community profile detail screen.
 
 ### Still Missing
 - Member post-auth shell and member dashboard.
 - Real profile data wiring.
-- Full polish for remaining community edge states.
+- Notifications system.
+- Community recent searches persistence.
 
 ## 3. Delivery Phases
 ### Phase 1: Keep Clinician Assessment Stable
