@@ -4,7 +4,7 @@ import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
 import { PostCard } from "@/components/community/PostCard";
-import { ClinicianShell } from "@/components/ClinicianShell";
+import { MemberShell } from "@/components/MemberShell";
 import { useOptimisticReactions } from "@/hooks/useOptimisticReactions";
 import { useAuthStore } from "@/store/authStore";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -134,7 +134,7 @@ export default function CommunityProfile() {
   });
 
   return (
-    <ClinicianShell showHeader={false} scrollable={false}>
+    <MemberShell showHeader={false} scrollable={false}>
       <View className="flex-1">
         <View className="flex-1">
           <FlashList
@@ -242,6 +242,7 @@ export default function CommunityProfile() {
               <View className="px-5">
                 <PostCard
                   post={item}
+                  role="member"
                   onLike={() =>
                     handleLike(
                       item.id,
@@ -326,6 +327,6 @@ export default function CommunityProfile() {
           </View>
         </View>
       </Modal>
-    </ClinicianShell>
+    </MemberShell>
   );
 }

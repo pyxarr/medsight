@@ -14,7 +14,7 @@ import { FlashList, type FlashListRef } from "@shopify/flash-list";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { CommunityHeader } from "@/components/community/CommunityHeader";
 import { PostCard } from "@/components/community/PostCard";
-import { ClinicianShell } from "@/components/ClinicianShell";
+import { MemberShell } from "@/components/MemberShell";
 import { useCommunityRealtime } from "@/hooks/useCommunityRealtime";
 import { useOptimisticReactions } from "@/hooks/useOptimisticReactions";
 import { getFeed, getFollowingFeed, deletePost } from "@/services/communityService";
@@ -120,39 +120,39 @@ export default function CommunityFeed() {
   function handleProfilePress() {
     setIsMenuOpen(false);
     const userId = session?.user?.id ?? "1";
-    router.push(`/(clinician)/(tabs)/community/profile/${userId}` as any);
+    router.push(`/(member)/(tabs)/community/profile/${userId}` as any);
   }
 
   function handleAccountSettingsPress() {
     setIsMenuOpen(false);
-    router.push("/(clinician)/(tabs)/profile");
+    router.push("/(member)/(tabs)/profile");
   }
 
   function handleBookmarkPress() {
     setIsMenuOpen(false);
     const userId = session?.user?.id ?? "1";
-    router.push(`/(clinician)/(tabs)/community/bookmark/${userId}` as any);
+    router.push(`/(member)/(tabs)/community/bookmark/${userId}` as any);
   }
 
   function handleExitCommunityPress() {
     setIsMenuOpen(false);
-    router.replace("/(clinician)/(tabs)");
+    router.replace("/(member)/(tabs)" as any);
   }
 
   if (isLoading) {
     return (
-      <ClinicianShell showHeader={false}>
+      <MemberShell showHeader={false}>
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#2563EB" />
+          <ActivityIndicator size="large" color="#DB2777" />
           <Text className="mt-4 text-gray-500">Loading your feed...</Text>
         </View>
-      </ClinicianShell>
+      </MemberShell>
     );
   }
 
   if (isError) {
     return (
-      <ClinicianShell showHeader={false}>
+      <MemberShell showHeader={false}>
         <View className="flex-1 justify-center items-center px-10">
           <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
           <Text className="text-center text-lg font-semibold text-gray-900 mt-4">
@@ -163,17 +163,17 @@ export default function CommunityFeed() {
           </Text>
           <TouchableOpacity
             onPress={handleRefresh}
-            className="bg-blue-600 px-6 py-3 rounded-full"
+            className="bg-[#DB2777] px-6 py-3 rounded-full"
           >
             <Text className="text-white font-semibold">Retry</Text>
           </TouchableOpacity>
         </View>
-      </ClinicianShell>
+      </MemberShell>
     );
   }
 
   return (
-    <ClinicianShell showHeader={false} scrollable={false}>
+    <MemberShell showHeader={false} scrollable={false}>
       <FlashList
         ref={flashListRef}
         data={allPosts}
@@ -182,6 +182,7 @@ export default function CommunityFeed() {
         renderItem={({ item }) => (
           <PostCard
             post={item}
+            role="member"
             onLike={() =>
               handleLike(
                 item.id,
@@ -251,7 +252,7 @@ export default function CommunityFeed() {
             */}
             <CommunityHeader
               onAvatarPress={() => setIsMenuOpen((prev) => !prev)}
-              role="clinician"
+              role="member"
             />
             <View className="px-5 pt-2 pb-4">
               <View className="flex-row items-center justify-center gap-6 border-b border-gray-100">
@@ -261,7 +262,7 @@ export default function CommunityFeed() {
                 >
                   <Text
                     className={`text-base pb-2 ${activeTab === "foryou"
-                      ? "font-semibold text-gray-900 border-b-2 border-blue-500"
+                      ? "font-semibold text-gray-900 border-b-2 border-[#DB2777]"
                       : "text-gray-400"
                       }`}
                   >
@@ -275,7 +276,7 @@ export default function CommunityFeed() {
                 >
                   <Text
                     className={`text-base pb-2 ${activeTab === "following"
-                      ? "font-semibold text-gray-900 border-b-2 border-blue-500"
+                      ? "font-semibold text-gray-900 border-b-2 border-[#DB2777]"
                       : "text-gray-400"
                       }`}
                   >
@@ -288,7 +289,7 @@ export default function CommunityFeed() {
         }
         ListFooterComponent={
           isFetchingNextPage ? (
-            <ActivityIndicator className="py-4" color="#2563EB" />
+            <ActivityIndicator className="py-4" color="#DB2777" />
           ) : null
         }
         onEndReached={() => {
@@ -302,7 +303,7 @@ export default function CommunityFeed() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={handleRefresh}
-            colors={["#2563EB"]}
+            colors={["#DB2777"]}
           />
         }
       />
@@ -310,7 +311,7 @@ export default function CommunityFeed() {
       {/* FAB */}
       <TouchableOpacity
         onPress={() => router.push("/community/create")}
-        className="absolute bottom-6 right-6 w-14 h-14 bg-blue-600 rounded-full items-center justify-center shadow-lg shadow-blue-600/30"
+        className="absolute bottom-6 right-6 w-14 h-14 bg-[#DB2777] rounded-full items-center justify-center shadow-lg shadow-[#DB2777]/30"
         activeOpacity={0.8}
       >
         <Ionicons name="add" size={32} color="#fff" />
@@ -318,7 +319,7 @@ export default function CommunityFeed() {
 
       {/*
         Dropdown lives here — sibling to FlashList, not inside it.
-        Absolute positioning is relative to ClinicianShell's root View,
+        Absolute positioning is relative to MemberShell's root View,
         so it paints on top of every list card.
       */}
       {isMenuOpen && (
@@ -429,6 +430,6 @@ export default function CommunityFeed() {
           </View>
         </View>
       </Modal>
-    </ClinicianShell>
+    </MemberShell>
   );
 }

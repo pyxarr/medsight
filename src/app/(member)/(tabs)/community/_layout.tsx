@@ -7,7 +7,7 @@ export default function CommunityLayout() {
   const [isLoading, setIsLoading] = useState(true);
 
   if (isLoading) {
-    return <CommunityLoadingScreen onAnimationComplete={() => setIsLoading(false)} />;
+    return <CommunityLoadingScreen color="#DB2777" onAnimationComplete={() => setIsLoading(false)} />;
   }
 
   return (

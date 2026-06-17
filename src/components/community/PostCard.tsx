@@ -18,7 +18,13 @@ interface PostCardProps {
   repostCountOverride?: number;
   bookmarkCountOverride?: number;
   isAuthor?: boolean;
+  role?: "member" | "clinician";
 }
+
+const ACCENT: Record<"member" | "clinician", string> = {
+  member: "#DB2777",
+  clinician: "#2563EB",
+};
 
 export function PostCard({
   post,
@@ -31,8 +37,11 @@ export function PostCard({
   isBookmarkedOverride,
   likeCountOverride,
   repostCountOverride,
+  bookmarkCountOverride,
   isAuthor,
+  role = "clinician",
 }: PostCardProps) {
+  const accentColor = ACCENT[role];
   const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
 
@@ -43,7 +52,7 @@ export function PostCard({
   const repostCount = repostCountOverride ?? post.reaction_counts.repost_count;
 
   const handlePress = () => {
-    router.push(`/community/post/${post.id}`);
+    router.push(`/community/post/${post.id}` as any);
   };
 
   const handleDeletePress = () => {
@@ -116,9 +125,9 @@ export function PostCard({
             <Ionicons
               name={isLiked ? "thumbs-up" : "thumbs-up-outline"}
               size={18}
-              color={isLiked ? "#2563EB" : "#6B7280"}
+              color={isLiked ? accentColor : "#6B7280"}
             />
-            <Text className={`text-sm ${isLiked ? "text-blue-600" : "text-gray-500"}`}>
+            <Text className="text-sm" style={{ color: isLiked ? accentColor : "#6B7280" }}>
               {likeCount}
             </Text>
           </TouchableOpacity>
@@ -132,9 +141,9 @@ export function PostCard({
             <Ionicons
               name="repeat-outline"
               size={18}
-              color={isReposted ? "#2563EB" : "#6B7280"}
+              color={isReposted ? accentColor : "#6B7280"}
             />
-            <Text className={`text-sm ${isReposted ? "text-blue-600" : "text-gray-500"}`}>
+            <Text className="text-sm" style={{ color: isReposted ? accentColor : "#6B7280" }}>
               {repostCount}
             </Text>
           </TouchableOpacity>
@@ -148,7 +157,7 @@ export function PostCard({
             <Ionicons
               name={isBookmarked ? "bookmark" : "bookmark-outline"}
               size={18}
-              color={isBookmarked ? "#2563EB" : "#6B7280"}
+              color={isBookmarked ? accentColor : "#6B7280"}
             />
           </TouchableOpacity>
         </View>

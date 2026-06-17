@@ -3,9 +3,15 @@ import { Ionicons } from "@expo/vector-icons";
 
 interface CommunityHeaderProps {
   onAvatarPress: () => void;
+  role?: "member" | "clinician";
 }
 
-export function CommunityHeader({ onAvatarPress }: CommunityHeaderProps) {
+const LOGOS = {
+  member: require("@/assets/images/logo-3.png"),
+  clinician: require("@/assets/images/logo-1.png"),
+} as const;
+
+export function CommunityHeader({ onAvatarPress, role = "clinician" }: CommunityHeaderProps) {
   return (
     <View className="px-1 pt-4 pb-4">
       <View className="flex-row items-center justify-between">
@@ -18,7 +24,7 @@ export function CommunityHeader({ onAvatarPress }: CommunityHeaderProps) {
         </TouchableOpacity>
 
         <Image
-          source={require("@/assets/images/logo-1.png")}
+          source={LOGOS[role]}
           className="w-9 h-9"
         />
 

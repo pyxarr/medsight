@@ -19,7 +19,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { CommentItem } from "@/components/community/CommentItem";
 import { PostCard } from "@/components/community/PostCard";
-import { ClinicianShell } from "@/components/ClinicianShell";
+import { MemberShell } from "@/components/MemberShell";
 import { useOptimisticReactions } from "@/hooks/useOptimisticReactions";
 import { getPostDetail, createReply, deletePost } from "@/services/communityService";
 import { useAuthStore } from "@/store/authStore";
@@ -124,17 +124,17 @@ export default function PostDetail() {
 
   if (isLoadingPost) {
     return (
-      <ClinicianShell showHeader={false}>
+      <MemberShell showHeader={false}>
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#2563EB" />
         </View>
-      </ClinicianShell>
+      </MemberShell>
     );
   }
 
   if (isPostError) {
     return (
-      <ClinicianShell showHeader={false}>
+      <MemberShell showHeader={false}>
         <View className="flex-1 justify-center items-center px-10">
           <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
           <Text className="text-center text-lg font-semibold text-gray-900 mt-4">
@@ -147,12 +147,12 @@ export default function PostDetail() {
             <Text className="text-white font-semibold">Retry</Text>
           </TouchableOpacity>
         </View>
-      </ClinicianShell>
+      </MemberShell>
     );
   }
 
   return (
-    <ClinicianShell scrollable={false} showHeader={false}>
+    <MemberShell scrollable={false} showHeader={false}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === "ios" ? "padding" : "height"} 
         className="flex-1"
@@ -173,6 +173,7 @@ export default function PostDetail() {
             {detailData && (
               <PostCard 
                 post={detailData}
+                role="member"
                 onLike={() => handleLike(id, detailData.reaction_counts.is_liked, detailData.reaction_counts.like_count, detailData.reaction_counts.is_reposted, detailData.reaction_counts.repost_count, detailData.reaction_counts.is_bookmarked, detailData.reaction_counts.bookmark_count)}
                 onRepost={() => handleRepost(id, detailData.reaction_counts.is_reposted, detailData.reaction_counts.repost_count, detailData.reaction_counts.is_liked, detailData.reaction_counts.like_count, detailData.reaction_counts.is_bookmarked, detailData.reaction_counts.bookmark_count)}
                 onBookmark={() => handleBookmark(id, detailData.reaction_counts.is_bookmarked, detailData.reaction_counts.bookmark_count, detailData.reaction_counts.is_liked, detailData.reaction_counts.like_count, detailData.reaction_counts.is_reposted, detailData.reaction_counts.repost_count)}
@@ -199,6 +200,7 @@ export default function PostDetail() {
               <CommentItem 
                 key={reply.id} 
                 post={reply} 
+                role="member"
                 onLike={() => handleLike(reply.id, reply.reaction_counts.is_liked, reply.reaction_counts.like_count, reply.reaction_counts.is_reposted, reply.reaction_counts.repost_count, reply.reaction_counts.is_bookmarked, reply.reaction_counts.bookmark_count)}
                 onRepost={() => handleRepost(reply.id, reply.reaction_counts.is_reposted, reply.reaction_counts.repost_count, reply.reaction_counts.is_liked, reply.reaction_counts.like_count, reply.reaction_counts.is_bookmarked, reply.reaction_counts.bookmark_count)}
                 onBookmark={() => handleBookmark(reply.id, reply.reaction_counts.is_bookmarked, reply.reaction_counts.bookmark_count, reply.reaction_counts.is_liked, reply.reaction_counts.like_count, reply.reaction_counts.is_reposted, reply.reaction_counts.repost_count)}
@@ -303,6 +305,6 @@ export default function PostDetail() {
             </View>
           </View>
         </Modal>
-      </ClinicianShell>
+      </MemberShell>
     );
   }

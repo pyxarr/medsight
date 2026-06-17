@@ -12,7 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "use-debounce";
 import { CommunitySearchBar } from "@/components/community/CommunitySearchBar";
-import { ClinicianShell } from "@/components/ClinicianShell";
+import { MemberShell } from "@/components/MemberShell";
 import { searchCommunity } from "@/services/communityService";
 import { useAuthStore } from "@/store/authStore";
 import type { AuthorInfo, CommunityPost } from "@/types/community";
@@ -49,7 +49,7 @@ export default function CommunitySearch() {
   ];
 
   return (
-    <ClinicianShell showHeader={false} scrollable={false}>
+    <MemberShell showHeader={false} scrollable={false}>
       <View className="flex-1 pt-4">
         <CommunitySearchBar
           value={query}
@@ -120,7 +120,7 @@ export default function CommunitySearch() {
                     activeOpacity={0.7}
                     onPress={() =>
                       router.push(
-                        `/(clinician)/(tabs)/community/profile/${user.id}` as any,
+                        `/(member)/(tabs)/community/profile/${user.id}` as any,
                       )
                     }
                   >
@@ -163,7 +163,7 @@ export default function CommunitySearch() {
                     activeOpacity={0.7}
                     onPress={() =>
                       router.push(
-                        `/(clinician)/(tabs)/community/post/${post.id}` as any,
+                        `/(member)/(tabs)/community/post/${post.id}` as any,
                       )
                     }
                   >
@@ -191,6 +191,6 @@ export default function CommunitySearch() {
           />
         )}
       </View>
-    </ClinicianShell>
+    </MemberShell>
   );
 }

@@ -15,7 +15,13 @@ interface CommentItemProps {
   likeCountOverride?: number;
   repostCountOverride?: number;
   bookmarkCountOverride?: number;
+  role?: "member" | "clinician";
 }
+
+const ACCENT: Record<"member" | "clinician", string> = {
+  member: "#DB2777",
+  clinician: "#2563EB",
+};
 
 export function CommentItem({
   post,
@@ -27,7 +33,9 @@ export function CommentItem({
   isBookmarkedOverride,
   likeCountOverride,
   repostCountOverride,
+  role = "clinician",
 }: CommentItemProps) {
+  const accentColor = ACCENT[role];
   const isLiked = isLikedOverride ?? post.reaction_counts.is_liked;
   const isReposted = isRepostedOverride ?? post.reaction_counts.is_reposted;
   const isBookmarked = isBookmarkedOverride ?? post.reaction_counts.is_bookmarked;
@@ -81,9 +89,9 @@ export function CommentItem({
           <Ionicons 
             name={isLiked ? "thumbs-up" : "thumbs-up-outline"} 
             size={16} 
-            color={isLiked ? "#2563EB" : "#6B7280"} 
+            color={isLiked ? accentColor : "#6B7280"} 
           />
-          <Text className={`text-xs ${isLiked ? "text-blue-600" : "text-gray-500"}`}>
+          <Text className="text-xs" style={{ color: isLiked ? accentColor : "#6B7280" }}>
             {likeCount}
           </Text>
         </TouchableOpacity>
@@ -97,9 +105,9 @@ export function CommentItem({
           <Ionicons
             name="repeat-outline"
             size={16}
-            color={isReposted ? "#2563EB" : "#6B7280"}
+            color={isReposted ? accentColor : "#6B7280"}
           />
-          <Text className={`text-xs ${isReposted ? "text-blue-600" : "text-gray-500"}`}>
+          <Text className="text-xs" style={{ color: isReposted ? accentColor : "#6B7280" }}>
             {repostCount}
           </Text>
         </TouchableOpacity>
@@ -108,7 +116,7 @@ export function CommentItem({
           <Ionicons 
             name={isBookmarked ? "bookmark" : "bookmark-outline"} 
             size={16} 
-            color={isBookmarked ? "#2563EB" : "#6B7280"} 
+            color={isBookmarked ? accentColor : "#6B7280"} 
           />
         </TouchableOpacity>
       </View>

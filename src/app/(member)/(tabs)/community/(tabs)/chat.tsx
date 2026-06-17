@@ -2,7 +2,7 @@ import { useState } from "react";
 import { View, Text, FlatList, TouchableOpacity } from "react-native";
 import { ChatItem } from "@/components/community/ChatItem";
 import { CommunitySearchBar } from "@/components/community/CommunitySearchBar";
-import { ClinicianShell } from "@/components/ClinicianShell";
+import { MemberShell } from "@/components/MemberShell";
 
 type FilterType = "recents" | "unread";
 
@@ -79,7 +79,7 @@ export default function CommunityChat() {
     : MOCK_CHATS;
 
   return (
-    <ClinicianShell showHeader={false} scrollable={false}>
+    <MemberShell showHeader={false} scrollable={false}>
       <View className="flex-1">
         {/* Header */}
         <View className="items-center py-4">
@@ -97,7 +97,7 @@ export default function CommunityChat() {
         <View className="flex-row items-center gap-2 px-5 mb-2">
           <TouchableOpacity
             className={`px-4 py-1.5 rounded-full ${
-              activeFilter === "recents" ? "bg-blue-500" : "bg-gray-100"
+              activeFilter === "recents" ? "bg-[#DB2777]" : "bg-gray-100"
             }`}
             onPress={() => setActiveFilter("recents")}
             activeOpacity={0.7}
@@ -112,7 +112,7 @@ export default function CommunityChat() {
           </TouchableOpacity>
           <TouchableOpacity
             className={`px-4 py-1.5 rounded-full ${
-              activeFilter === "unread" ? "bg-blue-500" : "bg-gray-100"
+              activeFilter === "unread" ? "bg-[#DB2777]" : "bg-gray-100"
             }`}
             onPress={() => setActiveFilter("unread")}
             activeOpacity={0.7}
@@ -131,10 +131,10 @@ export default function CommunityChat() {
         <FlatList
           data={filteredChats}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <ChatItem {...item} />}
+           renderItem={({ item }) => <ChatItem {...item} role="member" />}
           showsVerticalScrollIndicator={false}
         />
       </View>
-    </ClinicianShell>
+    </MemberShell>
   );
 }

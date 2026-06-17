@@ -11,7 +11,13 @@ interface ChatItemProps {
   unread?: number;
   seen?: boolean;
   isGroup?: boolean;
+  role?: "member" | "clinician";
 }
+
+const BASE_ROUTE: Record<"member" | "clinician", string> = {
+  member: "/(member)/(tabs)/community/chat",
+  clinician: "/(clinician)/(tabs)/community/chat",
+};
 
 export function ChatItem({
   id,
@@ -22,11 +28,12 @@ export function ChatItem({
   unread,
   seen,
   isGroup,
+  role = "clinician",
 }: ChatItemProps) {
   const router = useRouter();
 
   const handlePress = () => {
-    router.push(`/(clinician)/(tabs)/community/chat/${id}`);
+    router.push(`${BASE_ROUTE[role]}/${id}` as any);
   };
 
   return (

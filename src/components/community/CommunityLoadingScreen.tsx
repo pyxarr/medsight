@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withRepeat, 
-  withTiming, 
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
   withDelay,
   interpolate,
   Easing
@@ -12,26 +12,27 @@ import Animated, {
 
 interface CommunityLoadingScreenProps {
   onAnimationComplete?: () => void;
+  color?: string;
 }
 
-export function CommunityLoadingScreen({ onAnimationComplete }: CommunityLoadingScreenProps) {
+export function CommunityLoadingScreen({ onAnimationComplete, color = "#2563EB" }: CommunityLoadingScreenProps) {
   const progress = useSharedValue(0);
   const opacity = useSharedValue(1);
 
   useEffect(() => {
     // Pill loader animation: loops from 0 to 1
     progress.value = withRepeat(
-      withTiming(1, { 
-        duration: 1500, 
-        easing: Easing.bezier(0.42, 0, 0.58, 1) 
+      withTiming(1, {
+        duration: 1500,
+        easing: Easing.bezier(0.42, 0, 0.58, 1)
       }),
-      -1, 
+      -1,
       true
     );
 
     // Fade out the whole screen after a longer delay
     opacity.value = withDelay(
-      3000, 
+      3000,
       withTiming(0, { duration: 1000 })
     );
 
@@ -47,12 +48,12 @@ export function CommunityLoadingScreen({ onAnimationComplete }: CommunityLoading
   const pillStyle = useAnimatedStyle(() => {
     return {
       transform: [
-        { 
+        {
           translateX: interpolate(
-            progress.value, 
-            [0, 1], 
+            progress.value,
+            [0, 1],
             [0, 60] // Moves across the 60px wide pill
-          ) 
+          )
         }
       ],
     };
@@ -65,10 +66,14 @@ export function CommunityLoadingScreen({ onAnimationComplete }: CommunityLoading
   });
 
   return (
-    <Animated.View style={[styles.container, containerStyle]} pointerEvents="none">
+    <Animated.View style={[
+      styles.container,
+      { backgroundColor: color },
+      containerStyle,
+    ]} pointerEvents="none">
       <View className="items-center justify-center">
         <Text style={styles.title}>Community</Text>
-        
+
         {/* Pill Loader Container */}
         <View style={styles.pillContainer}>
           <Animated.View style={[styles.pillBar, pillStyle]} />
@@ -81,7 +86,6 @@ export function CommunityLoadingScreen({ onAnimationComplete }: CommunityLoading
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: "#2563EB",
     zIndex: 9999,
     alignItems: "center",
     justifyContent: "center",

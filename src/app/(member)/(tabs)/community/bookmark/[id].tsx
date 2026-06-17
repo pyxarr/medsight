@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PostCard } from "@/components/community/PostCard";
-import { ClinicianShell } from "@/components/ClinicianShell";
+import { MemberShell } from "@/components/MemberShell";
 import { useOptimisticReactions } from "@/hooks/useOptimisticReactions"
 import { getBookmarks, deletePost } from "@/services/communityService";
 import { useAuthStore } from "@/store/authStore";
@@ -80,7 +80,7 @@ export default function BookmarksScreen() {
     data?.pages.flatMap((page) => page.results ?? []).filter(Boolean) ?? [];
 
   return (
-    <ClinicianShell showHeader={false} scrollable={false}>
+    <MemberShell showHeader={false} scrollable={false}>
       <View className="flex-1">
         {/* Header */}
         <View className="pt-6 pb-4">
@@ -134,6 +134,7 @@ export default function BookmarksScreen() {
             renderItem={({ item }) => (
               <PostCard
                 post={item}
+                role="member"
                 onLike={() =>
                   handleLike(
                     item.id,
@@ -248,6 +249,6 @@ export default function BookmarksScreen() {
           </View>
         </View>
       </Modal>
-    </ClinicianShell>
+    </MemberShell>
   );
 }
