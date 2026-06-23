@@ -1,21 +1,21 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { ClinicianShell } from "@/components/ClinicianShell";
+import { MemberShell } from "@/components/MemberShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useManualAssessmentStore } from "@/store/manualAssessmentStore";
 
-function SelectionField<T extends string>({ 
-  label, 
-  options, 
-  value, 
-  onChange 
-}: { 
-  label: string; 
-  options: T[]; 
-  value: T | ""; 
-  onChange: (val: T) => void 
+function SelectionField<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: T[];
+  value: T | "";
+  onChange: (val: T) => void;
 }) {
   return (
     <View style={{ gap: 8 }}>
@@ -30,15 +30,17 @@ function SelectionField<T extends string>({
               paddingVertical: 8,
               borderRadius: 12,
               borderWidth: 1,
-              borderColor: value === opt ? "#2563EB" : "#D1D5DB",
-              backgroundColor: value === opt ? "#EFF6FF" : "white",
+              borderColor: value === opt ? "#DB2777" : "#D1D5DB",
+              backgroundColor: value === opt ? "#FDF2F8" : "white",
             }}
           >
-            <Text style={{ 
-              fontSize: 13, 
-              color: value === opt ? "#2563EB" : "#6B7280",
-              fontWeight: value === opt ? "600" : "400"
-            }}>
+            <Text
+              style={{
+                fontSize: 13,
+                color: value === opt ? "#DB2777" : "#6B7280",
+                fontWeight: value === opt ? "600" : "400",
+              }}
+            >
               {opt}
             </Text>
           </TouchableOpacity>
@@ -50,8 +52,15 @@ function SelectionField<T extends string>({
 
 const CURRENT_YEAR_PREFIX = `P-${new Date().getFullYear()}-`;
 
-export default function ManualClinicalScreen() {
-  const { firstName, lastName, patientId, setPatientInfo, clinicalData, setClinicalData } = useManualAssessmentStore();
+export default function MemberAnalysisScreen() {
+  const {
+    firstName,
+    lastName,
+    patientId,
+    setPatientInfo,
+    clinicalData,
+    setClinicalData,
+  } = useManualAssessmentStore();
 
   const patientSequence = patientId.startsWith(CURRENT_YEAR_PREFIX)
     ? patientId.slice(CURRENT_YEAR_PREFIX.length)
@@ -72,29 +81,47 @@ export default function ManualClinicalScreen() {
     { key: "invasive_nodes", label: "Invasive Nodes", placeholder: "e.g. 1" },
   ] as const;
 
+  const handleSubmit = () => {
+    router.push("/(member)/report/1");
+  };
+
   const Header = (
-    <View style={{
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 16,
-    }}>
-      <TouchableOpacity 
-        onPress={() => router.back()} 
-        style={{ padding: 8, backgroundColor: "white", borderRadius: 12, elevation: 2, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2 }}
+    <View
+      style={{
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 16,
+      }}
+    >
+      <TouchableOpacity
+        onPress={() => router.back()}
+        style={{
+          padding: 8,
+          backgroundColor: "white",
+          borderRadius: 12,
+          elevation: 2,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.1,
+          shadowRadius: 2,
+        }}
       >
         <Ionicons name="arrow-back" size={24} color="#111827" />
       </TouchableOpacity>
-      <Text style={{ fontSize: 20, fontWeight: "600", color: "#111827" }}>Clinical Data</Text>
+      <Text style={{ fontSize: 20, fontWeight: "600", color: "#111827" }}>
+        Run Analytics
+      </Text>
     </View>
   );
 
   return (
-    <ClinicianShell headerContent={Header}>
+    <MemberShell theme="main" headerContent={Header}>
       <View style={{ padding: 20, gap: 24 }}>
         <Text style={{ fontSize: 14, color: "#6B7280", marginBottom: 8 }}>
-          Enter mandatory clinical information. These fields are required for the risk assessment.
+          Enter your clinical information below to run a breast cancer risk
+          assessment.
         </Text>
 
         {/* Patient Info */}
@@ -118,7 +145,15 @@ export default function ManualClinicalScreen() {
           <View style={{ gap: 8 }}>
             <Text style={{ fontSize: 14, fontWeight: "500", color: "#6B7280" }}>Patient ID (optional)</Text>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Text style={{ fontSize: 16, color: "#9CA3AF", marginRight: -32, paddingLeft: 16, zIndex: 1 }}>
+              <Text
+                style={{
+                  fontSize: 16,
+                  color: "#9CA3AF",
+                  marginRight: -32,
+                  paddingLeft: 16,
+                  zIndex: 1,
+                }}
+              >
                 {CURRENT_YEAR_PREFIX}
               </Text>
               <Input
@@ -151,49 +186,48 @@ export default function ManualClinicalScreen() {
 
         {/* Selection Fields */}
         <View style={{ gap: 24 }}>
-          <SelectionField 
-            label="Menopause Status" 
-            options={["premenopausal", "postmenopausal"]} 
-            value={clinicalData.menopause || ""} 
-            onChange={(val) => setClinicalData({ menopause: val })} 
+          <SelectionField
+            label="Menopause Status"
+            options={["premenopausal", "postmenopausal"]}
+            value={clinicalData.menopause || ""}
+            onChange={(val) => setClinicalData({ menopause: val })}
           />
 
-          <SelectionField 
-            label="Breast Side" 
-            options={["left", "right"]} 
-            value={clinicalData.breast_side || ""} 
-            onChange={(val) => setClinicalData({ breast_side: val })} 
+          <SelectionField
+            label="Breast Side"
+            options={["left", "right"]}
+            value={clinicalData.breast_side || ""}
+            onChange={(val) => setClinicalData({ breast_side: val })}
           />
 
-          <SelectionField 
-            label="Metastasis" 
-            options={["no", "yes"]} 
-            value={clinicalData.metastasis || ""} 
-            onChange={(val) => setClinicalData({ metastasis: val })} 
+          <SelectionField
+            label="Metastasis"
+            options={["no", "yes"]}
+            value={clinicalData.metastasis || ""}
+            onChange={(val) => setClinicalData({ metastasis: val })}
           />
 
-          <SelectionField 
-            label="Breast Disease History" 
-            options={["no", "yes"]} 
-            value={clinicalData.breast_disease_history || ""} 
-            onChange={(val) => setClinicalData({ breast_disease_history: val })} 
+          <SelectionField
+            label="Breast Disease History"
+            options={["no", "yes"]}
+            value={clinicalData.breast_disease_history || ""}
+            onChange={(val) => setClinicalData({ breast_disease_history: val })}
           />
 
-          <SelectionField 
-            label="Breast Quadrant" 
-            options={["upper outer", "upper inner", "lower outer", "lower inner"]} 
-            value={clinicalData.breast_quadrant || ""} 
-            onChange={(val) => setClinicalData({ breast_quadrant: val })} 
+          <SelectionField
+            label="Breast Quadrant"
+            options={["upper outer", "upper inner", "lower outer", "lower inner"]}
+            value={clinicalData.breast_quadrant || ""}
+            onChange={(val) => setClinicalData({ breast_quadrant: val })}
           />
         </View>
 
-        <Button 
-          onPress={() => router.back()}
-          className="mt-4 bg-[#2563EB]"
-        >
-          <Text style={{ color: "white", fontWeight: "600", textAlign: "center" }}>Save and Return</Text>
+        <Button onPress={handleSubmit} className="mt-4 bg-[#DB2777]">
+          <Text style={{ color: "white", fontWeight: "600", textAlign: "center" }}>
+            Run Analysis
+          </Text>
         </Button>
       </View>
-    </ClinicianShell>
+    </MemberShell>
   );
 }

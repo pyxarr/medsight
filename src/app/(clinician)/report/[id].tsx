@@ -2,15 +2,15 @@ import React from "react";
 import { View, Text, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
-import { ConfidenceByDataset } from "@/components/clinician/report/ConfidenceByDataset";
-import { CrossDatasetAgreement } from "@/components/clinician/report/CrossDatasetAgreement";
-import { FeatureContributionChart } from "@/components/clinician/report/FeatureContributionChart";
-import { KeyContributingFactors } from "@/components/clinician/report/KeyContributingFactors";
-import { OodWarningCard } from "@/components/clinician/report/OodWarningCard";
-import { ReportDisclaimer } from "@/components/clinician/report/ReportDisclaimer";
-import { RiskSummaryCard } from "@/components/clinician/report/RiskSummaryCard";
-import { SuggestedAction } from "@/components/clinician/report/SuggestedAction";
 import { ClinicianShell } from "@/components/ClinicianShell";
+import { ConfidenceByDataset } from "@/components/report/ConfidenceByDataset";
+import { CrossDatasetAgreement } from "@/components/report/CrossDatasetAgreement";
+import { FeatureContributionChart } from "@/components/report/FeatureContributionChart";
+import { KeyContributingFactors } from "@/components/report/KeyContributingFactors";
+import { OodWarningCard } from "@/components/report/OodWarningCard";
+import { ReportDisclaimer } from "@/components/report/ReportDisclaimer";
+import { RiskSummaryCard } from "@/components/report/RiskSummaryCard";
+import { SuggestedAction } from "@/components/report/SuggestedAction";
 import { getAssessment, type AssessmentDetailResponse } from "@/services/assessmentService";
 import { useAuthStore } from "@/store/authStore";
 import type { RiskLevel } from "@/types/assessment";
@@ -96,7 +96,6 @@ export default function ReportScreen() {
     data: report, 
     isLoading, 
     isError, 
-    error 
   } = useQuery<AssessmentDetailResponse, Error, ReportData>({
     queryKey: ['assessment', id],
     queryFn: async () => {

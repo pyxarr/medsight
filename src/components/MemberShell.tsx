@@ -14,13 +14,20 @@ interface MemberShellProps {
   scrollable?: boolean;
   showHeader?: boolean;
   headerContent?: React.ReactNode;
+  theme?: "default" | "main";
 }
+
+const GRADIENTS = {
+  default: { colors: ["#FEF8F9", "#FFFFFF"] as const, locations: [0, 0.2] as const },
+  main: { colors: ["#FDF2F8", "#FFFFFF"] as const, locations: [0, 0.2] as const },
+} as const;
 
 export function MemberShell({
   children,
   scrollable = true,
   showHeader = true,
   headerContent,
+  theme = "default",
 }: MemberShellProps) {
   const defaultHeader = (
     <View className="flex-row items-center gap-2.5 px-5 pt-4 pb-4">
@@ -42,7 +49,7 @@ export function MemberShell({
   );
 
   return (
-  <LinearGradient colors={["#FEF8F9", "#FFFFFF"]} locations={[0, 0.2]} style={{ flex: 1 }}
+  <LinearGradient colors={GRADIENTS[theme].colors as any} locations={GRADIENTS[theme].locations as any} style={{ flex: 1 }}
 >
     <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
       <KeyboardAvoidingView
