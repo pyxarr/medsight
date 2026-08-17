@@ -25,11 +25,12 @@ export function RoleGuard({ children, requiredRole }: RoleGuardProps) {
     return <Redirect href="/onboarding/role-selection" />;
   }
 
-  if (user && (user.user_metadata?.acknowledged === false || user.user_metadata?.acknowledged === undefined)) {
-    if (role === 'clinician') {
-      return <Redirect href="/(auth)/clinician/acknowledge" />;
-    }
-    return <Redirect href="/onboarding/role-selection" />;
+  if (
+    requiredRole === 'clinician' &&
+    user &&
+    (user.user_metadata?.acknowledged === false || user.user_metadata?.acknowledged === undefined)
+  ) {
+    return <Redirect href="/(auth)/clinician/acknowledge" />;
   }
 
   return <>{children}</>;

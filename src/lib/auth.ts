@@ -11,6 +11,13 @@ export interface SignUpClinicianRequest {
   lastName: string;
 }
 
+export interface SignUpMemberRequest {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+}
+
 export interface SignInRequest {
   email: string;
   password: string;
@@ -25,6 +32,29 @@ export interface UpdatePasswordRequest {
   newPassword: string;
 }
 
+async function signUpWithRole({
+  email,
+  password,
+  firstName,
+  lastName,
+  role,
+}: SignUpClinicianRequest & { role: "clinician" | "member" }): Promise<{ data: any; error: AuthError | null }> {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        role,
+        first_name: firstName,
+        last_name: lastName,
+        acknowledged: false,
+      },
+    },
+  });
+
+  return { data, error };
+}
+
 /**
  * Sign up a new clinician account with professional identity metadata.
  */
@@ -34,20 +64,31 @@ export async function signUpClinician({
   firstName,
   lastName,
 }: SignUpClinicianRequest): Promise<{ data: any; error: AuthError | null }> {
-  const { data, error } = await supabase.auth.signUp({
+  return await signUpWithRole({
     email,
     password,
-      options: {
-        data: {
-          role: "clinician",
-          first_name: firstName,
-          last_name: lastName,
-          acknowledged: false,
-        },
-      },
+    firstName,
+    lastName,
+    role: "clinician",
   });
+}
 
-  return { data, error };
+/**
+ * Sign up a new member account with member identity metadata.
+ */
+export async function signUpMember({
+  email,
+  password,
+  firstName,
+  lastName,
+}: SignUpMemberRequest): Promise<{ data: any; error: AuthError | null }> {
+  return await signUpWithRole({
+    email,
+    password,
+    firstName,
+    lastName,
+    role: "member",
+  });
 }
 
 /**

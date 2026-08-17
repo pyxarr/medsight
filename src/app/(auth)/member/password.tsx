@@ -8,7 +8,7 @@ import { AuthShell } from "@/components/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { signUpClinician } from "@/lib/auth";
+import { signUpMember } from "@/lib/auth";
 import { passwordSchema } from "@/lib/validations/auth";
 import type { PasswordFormData } from "@/types/auth";
 
@@ -49,7 +49,7 @@ const MemberPassword = () => {
     setFormError(null);
 
     try {
-      const { error } = await signUpClinician({
+      const { error } = await signUpMember({
         email: params.email,
         password: data.password,
         firstName: params.firstName,
@@ -59,7 +59,7 @@ const MemberPassword = () => {
       if (error) {
         setFormError(error.message);
       } else {
-        router.push(`/(auth)/clinician/otp?flow=signup&email=${encodeURIComponent(params.email)}`);
+        router.push(`/(auth)/member/otp?flow=signup&email=${encodeURIComponent(params.email)}`);
       }
     } catch {
       setFormError("An unexpected error occurred. Please try again.");

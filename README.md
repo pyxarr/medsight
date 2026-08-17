@@ -157,6 +157,7 @@ Copy `.env.example` to `.env` and provide:
 ```bash
 EXPO_PUBLIC_SUPABASE_URL=
 EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+EXPO_PUBLIC_API_URL=
 ```
 
 ## Documentation 📚

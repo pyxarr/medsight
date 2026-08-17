@@ -1,10 +1,14 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { ActivityIndicator, Alert, Text, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { MemberShell } from "@/components/MemberShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useManualAssessmentStore } from "@/store/manualAssessmentStore";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { submitMemberAssessment } from "@/services/memberService";
+import { useAuthStore } from "@/store/authStore";
+import { useManualAssessmentStore, type ClinicalData } from "@/store/manualAssessmentStore";
+import type { MemberManualAssessmentRequest } from "@/types/member";
 
 function SelectionField<T extends string>({
   label,
@@ -50,39 +54,69 @@ function SelectionField<T extends string>({
   );
 }
 
-const CURRENT_YEAR_PREFIX = `P-${new Date().getFullYear()}-`;
-
 export default function MemberAnalysisScreen() {
+  const token = useAuthStore((state) => state.session?.access_token);
+  const user = useAuthStore((state) => state.user);
+  const queryClient = useQueryClient();
   const {
     firstName,
     lastName,
-    patientId,
     setPatientInfo,
     clinicalData,
     setClinicalData,
   } = useManualAssessmentStore();
 
-  const patientSequence = patientId.startsWith(CURRENT_YEAR_PREFIX)
-    ? patientId.slice(CURRENT_YEAR_PREFIX.length)
-    : patientId;
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: async () => {
+      if (!token) {
+        throw new Error("No authentication token available");
+      }
 
-  const handlePatientIdChange = (text: string) => {
-    if (/^P-\d{4}-/i.test(text)) {
-      setPatientInfo({ patientId: text.toUpperCase() });
-      return;
-    }
-    const digits = text.replace(/[^\d]/g, "");
-    setPatientInfo({ patientId: digits ? `${CURRENT_YEAR_PREFIX}${digits}` : "" });
-  };
+      return await submitMemberAssessment(
+        {
+          first_name: (firstName || (user?.user_metadata?.first_name as string) || "").trim(),
+          last_name: (lastName || (user?.user_metadata?.last_name as string) || "").trim(),
+          clinical_data: {
+            age: clinicalData.age || "",
+            menopause_status: (clinicalData.menopause || "") as MemberManualAssessmentRequest["clinical_data"]["menopause_status"],
+            tumour_size_cm: clinicalData.tumor_size_cm || "",
+            invasive_nodes: clinicalData.invasive_nodes || "",
+            breast_side: (clinicalData.breast_side || "") as MemberManualAssessmentRequest["clinical_data"]["breast_side"],
+            metastasis: (clinicalData.metastasis || "") as MemberManualAssessmentRequest["clinical_data"]["metastasis"],
+            breast_quadrant: (clinicalData.breast_quadrant || "") as MemberManualAssessmentRequest["clinical_data"]["breast_quadrant"],
+            breast_disease_history: (clinicalData.breast_disease_history || "") as MemberManualAssessmentRequest["clinical_data"]["breast_disease_history"],
+          },
+        },
+        token,
+      );
+    },
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: ["member-assessments"] });
+      router.push({
+        pathname: "/(member)/report/[id]",
+        params: { id: response.assessment_id },
+      });
+    },
+    onError: (error) => {
+      Alert.alert(
+        "Assessment failed",
+        error instanceof Error ? error.message : "Please try again.",
+      );
+    },
+  });
 
-  const numericFields = [
+  const numericFields: {
+    key: keyof Pick<ClinicalData, "age" | "tumor_size_cm" | "invasive_nodes">;
+    label: string;
+    placeholder: string;
+  }[] = [
     { key: "age", label: "Patient Age", placeholder: "e.g. 45" },
     { key: "tumor_size_cm", label: "Tumor Size (cm)", placeholder: "e.g. 2.5" },
     { key: "invasive_nodes", label: "Invasive Nodes", placeholder: "e.g. 1" },
-  ] as const;
+  ];
 
-  const handleSubmit = () => {
-    router.push("/(member)/report/1");
+  const handleSubmit = async () => {
+    await mutateAsync();
   };
 
   const Header = (
@@ -130,7 +164,7 @@ export default function MemberAnalysisScreen() {
             <Text style={{ fontSize: 14, fontWeight: "500", color: "#374151" }}>First Name</Text>
             <Input
               placeholder="Enter first name"
-              value={firstName}
+              value={firstName || (user?.user_metadata?.first_name as string) || ""}
               onChangeText={(text) => setPatientInfo({ firstName: text })}
             />
           </View>
@@ -138,32 +172,9 @@ export default function MemberAnalysisScreen() {
             <Text style={{ fontSize: 14, fontWeight: "500", color: "#374151" }}>Last Name</Text>
             <Input
               placeholder="Enter last name"
-              value={lastName}
+              value={lastName || (user?.user_metadata?.last_name as string) || ""}
               onChangeText={(text) => setPatientInfo({ lastName: text })}
             />
-          </View>
-          <View style={{ gap: 8 }}>
-            <Text style={{ fontSize: 14, fontWeight: "500", color: "#6B7280" }}>Patient ID (optional)</Text>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Text
-                style={{
-                  fontSize: 16,
-                  color: "#9CA3AF",
-                  marginRight: -32,
-                  paddingLeft: 16,
-                  zIndex: 1,
-                }}
-              >
-                {CURRENT_YEAR_PREFIX}
-              </Text>
-              <Input
-                placeholder="001"
-                keyboardType="numeric"
-                value={patientSequence}
-                onChangeText={handlePatientIdChange}
-                style={{ paddingLeft: 80 }}
-              />
-            </View>
           </View>
         </View>
 
@@ -177,8 +188,8 @@ export default function MemberAnalysisScreen() {
               <Input
                 placeholder={field.placeholder}
                 keyboardType="numeric"
-                value={(clinicalData as any)[field.key] || ""}
-                onChangeText={(text) => setClinicalData({ [field.key]: text } as any)}
+                value={clinicalData[field.key] || ""}
+                onChangeText={(text) => setClinicalData({ [field.key]: text } as Partial<ClinicalData>)}
               />
             </View>
           ))}
@@ -188,44 +199,53 @@ export default function MemberAnalysisScreen() {
         <View style={{ gap: 24 }}>
           <SelectionField
             label="Menopause Status"
-            options={["premenopausal", "postmenopausal"]}
-            value={clinicalData.menopause || ""}
+            options={["premenopausal", "postmenopausal"] as const}
+            value={(clinicalData.menopause ?? "") as "" | "premenopausal" | "postmenopausal"}
             onChange={(val) => setClinicalData({ menopause: val })}
           />
 
           <SelectionField
             label="Breast Side"
-            options={["left", "right"]}
-            value={clinicalData.breast_side || ""}
+            options={["left", "right"] as const}
+            value={(clinicalData.breast_side ?? "") as "" | "left" | "right"}
             onChange={(val) => setClinicalData({ breast_side: val })}
           />
 
           <SelectionField
             label="Metastasis"
-            options={["no", "yes"]}
-            value={clinicalData.metastasis || ""}
+            options={["no", "yes"] as const}
+            value={(clinicalData.metastasis ?? "") as "" | "no" | "yes"}
             onChange={(val) => setClinicalData({ metastasis: val })}
           />
 
           <SelectionField
             label="Breast Disease History"
-            options={["no", "yes"]}
-            value={clinicalData.breast_disease_history || ""}
+            options={["no", "yes"] as const}
+            value={(clinicalData.breast_disease_history ?? "") as "" | "no" | "yes"}
             onChange={(val) => setClinicalData({ breast_disease_history: val })}
           />
 
           <SelectionField
             label="Breast Quadrant"
-            options={["upper outer", "upper inner", "lower outer", "lower inner"]}
-            value={clinicalData.breast_quadrant || ""}
+            options={["upper outer", "upper inner", "lower outer", "lower inner"] as const}
+            value={(clinicalData.breast_quadrant ?? "") as
+              | ""
+              | "upper outer"
+              | "upper inner"
+              | "lower outer"
+              | "lower inner"}
             onChange={(val) => setClinicalData({ breast_quadrant: val })}
           />
         </View>
 
-        <Button onPress={handleSubmit} className="mt-4 bg-[#DB2777]">
-          <Text style={{ color: "white", fontWeight: "600", textAlign: "center" }}>
-            Run Analysis
-          </Text>
+        <Button onPress={handleSubmit} className="mt-4 bg-[#DB2777]" disabled={isPending}>
+          {isPending ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={{ color: "white", fontWeight: "600", textAlign: "center" }}>
+              Run Analysis
+            </Text>
+          )}
         </Button>
       </View>
     </MemberShell>

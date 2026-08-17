@@ -10,7 +10,7 @@ const Explore = () => {
   return (
     <View className="flex-1">
       <MemberShell theme="main" showHeader={false}>
-        <HomeHeader onHamburgerPress={() => setDrawerVisible(true)} />
+        {/* <HomeHeader onHamburgerPress={() => setDrawerVisible(true)} /> */}
         <View>
           <Text>explore</Text>
         </View>

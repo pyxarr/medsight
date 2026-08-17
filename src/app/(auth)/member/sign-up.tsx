@@ -9,7 +9,6 @@ import { AuthShell } from "@/components/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-
 import { signUpSchema } from "@/lib/validations/auth";
 import type { SignUpFormData } from "@/types/auth";
 
@@ -49,7 +48,7 @@ const MemberSignUp = () => {
       lastName: data.lastName,
       email: data.email,
     });
-    router.push(`/(auth)/clinician/password?${params.toString()}`);
+    router.push(`/(auth)/member/password?${params.toString()}`);
   };
 
   return (

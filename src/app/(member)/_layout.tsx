@@ -3,8 +3,8 @@ import { RoleGuard } from "@/components/auth/RoleGuard";
 
 export default function MemberLayout() {
   return (
-    // <RoleGuard requiredRole="member">
+    <RoleGuard requiredRole="member">
       <Stack screenOptions={{ headerShown: false }} />
-    // </RoleGuard>
+    </RoleGuard>
   );
 }

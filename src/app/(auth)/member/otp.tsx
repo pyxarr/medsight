@@ -11,7 +11,7 @@ const RESEND_SECONDS = 30;
 
 type OtpState = "idle" | "error" | "success";
 
-const ClinicianOtp = () => {
+const MemberOtp = () => {
   const router = useRouter();
   const { email, flow } = useLocalSearchParams<{ email: string; flow: string }>();
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
@@ -67,9 +67,9 @@ const ClinicianOtp = () => {
       } else {
         setOtpState("success");
         if (flow === "signup") {
-          router.push("/(auth)/clinician/acknowledge");
+          router.replace("/(member)/(tabs)");
         } else if (flow === "reset") {
-          router.push(`/(auth)/clinician/new-password?email=${encodeURIComponent(email)}`);
+          router.push(`/(auth)/member/new-password?email=${encodeURIComponent(email)}`);
         }
       }
     } catch {
@@ -207,4 +207,4 @@ const ClinicianOtp = () => {
   );
 };
 
-export default ClinicianOtp;
+export default MemberOtp;

@@ -9,7 +9,7 @@ import { AuthShell } from "@/components/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { signInClinician } from "@/lib/auth";
+import { signInClinician, signOut } from "@/lib/auth";
 import { signInSchema } from "@/lib/validations/auth";
 import { useAuthStore } from "@/store/authStore";
 import type { SignInFormData } from "@/types/auth";
@@ -57,8 +57,15 @@ const MemberSignIn = () => {
       if (error) {
         setLoginError(error.message);
       } else if (responseData?.session) {
+        const role = responseData.user?.user_metadata?.role;
+        if (role !== "member") {
+          await signOut();
+          setLoginError("Please sign in with a member account.");
+          return;
+        }
+
         setSession(responseData.session);
-        router.replace("/(member)/" as any);
+        router.replace("/(member)/(tabs)" as any);
       }
     } catch (err) {
       console.error("Unexpected error during sign-in:", err);

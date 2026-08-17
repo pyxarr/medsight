@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { View, Text, TextInput } from "react-native";
+import { ActivityIndicator, TextInput, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AnalysisResults } from "@/components/member/AnalysisResults";
 import { BannerCarousel } from "@/components/member/BannerCarousel";

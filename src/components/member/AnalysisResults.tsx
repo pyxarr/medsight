@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
-import { ANALYSIS_DATA } from "@/data/analysisMockData";
+import { useQuery } from "@tanstack/react-query";
+import { listMemberAssessments } from "@/services/memberService";
+import { useAuthStore } from "@/store/authStore";
 
 const FILTERS = ["All", "Success", "High risk"] as const;
 
@@ -18,13 +20,29 @@ interface AnalysisResultsProps {
 export function AnalysisResults({ maxItems, hideHeading }: AnalysisResultsProps) {
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<"All" | "Success" | "High risk">("All");
+  const token = useAuthStore((state) => state.session?.access_token);
 
-  const allFiltered =
-    activeFilter === "All"
-      ? ANALYSIS_DATA
-      : ANALYSIS_DATA.filter((d) => d.status === activeFilter);
+  const statusFilter = activeFilter === "All" ? undefined : activeFilter;
 
-  const filtered = maxItems ? allFiltered.slice(0, maxItems) : allFiltered;
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["member-assessments", statusFilter ?? "all", token],
+    queryFn: async () => {
+      if (!token) {
+        throw new Error("No authentication token available");
+      }
+
+      return await listMemberAssessments(token, {
+        status: statusFilter,
+        page: 1,
+        page_size: 20,
+      });
+    },
+    enabled: !!token,
+  });
+
+  const allResults = data?.results ?? [];
+  const filtered = maxItems ? allResults.slice(0, maxItems) : allResults;
+  const showEmptyState = !!token && !isLoading && !isError && filtered.length === 0;
 
   return (
     <View>
@@ -33,6 +51,20 @@ export function AnalysisResults({ maxItems, hideHeading }: AnalysisResultsProps)
           Analysis results
         </Text>
       )}
+
+      {!token ? (
+        <Text className="text-sm text-gray-400 text-center py-8">
+          Sign in to view your assessments.
+        </Text>
+      ) : isLoading ? (
+        <View className="items-center py-8">
+          <ActivityIndicator color="#DB2777" />
+        </View>
+      ) : isError ? (
+        <Text className="text-sm text-gray-400 text-center py-8">
+          Unable to load assessments.
+        </Text>
+      ) : null}
 
       <ScrollView
         horizontal
@@ -66,22 +98,24 @@ export function AnalysisResults({ maxItems, hideHeading }: AnalysisResultsProps)
         </View>
       </ScrollView>
 
-      {filtered.length === 0 ? (
+      {showEmptyState ? (
         <Text className="text-sm text-gray-400 text-center py-8">
-          No results found
+          No assessments found
         </Text>
       ) : (
         <View className="gap-3">
           {filtered.map((item) => {
-            const statusStyle = STATUS_STYLES[item.status];
+            const statusStyle = STATUS_STYLES[item.status] ?? STATUS_STYLES.Success;
             return (
               <TouchableOpacity
                 key={item.id}
                 activeOpacity={0.7}
-                onPress={() => router.push({
-                  pathname: "/(member)/report/[id]",
-                  params: { id: item.id },
-                } as any)}
+                onPress={() =>
+                  router.push({
+                    pathname: "/(member)/report/[id]",
+                    params: { id: item.id },
+                  })
+                }
                 className="bg-white rounded-xl border border-gray-100 p-4"
                 style={{
                   shadowColor: "#000",
@@ -94,10 +128,10 @@ export function AnalysisResults({ maxItems, hideHeading }: AnalysisResultsProps)
                 <View className="flex-row items-start justify-between">
                   <View className="flex-1">
                     <Text className="text-base font-bold text-gray-900">
-                      {item.patientName}
+                      {item.patient_name}
                     </Text>
                     <Text className="text-xs text-gray-400 mt-0.5">
-                      {item.patientId}
+                      {item.patient_id}
                     </Text>
                   </View>
 
@@ -116,20 +150,20 @@ export function AnalysisResults({ maxItems, hideHeading }: AnalysisResultsProps)
 
                 <View className="flex-row items-center justify-between mt-4 pt-3 border-t border-gray-100">
                   <View className="flex-row items-center gap-1.5">
-                    <Text className="text-xs text-gray-400">Risk level :</Text>
+                    <Text className="text-xs text-gray-400">Risk level:</Text>
                     <Text
                       className={`text-xs font-bold ${
-                        item.riskLevel === "High" ? "text-[#DC2626]" : "text-[#16A34A]"
+                        item.risk_level === "High" ? "text-[#DC2626]" : item.risk_level === "Medium" ? "text-[#D97706]" : "text-[#16A34A]"
                       }`}
                     >
-                      {item.riskLevel}
+                      {item.risk_level}
                     </Text>
                   </View>
 
                   <View className="flex-row items-center gap-1.5">
-                    <Text className="text-xs text-gray-400">Confidence :</Text>
+                    <Text className="text-xs text-gray-400">Status:</Text>
                     <Text className="text-xs font-bold text-gray-900">
-                      {item.confidence}%
+                      {item.status}
                     </Text>
                   </View>
                 </View>
@@ -139,7 +173,7 @@ export function AnalysisResults({ maxItems, hideHeading }: AnalysisResultsProps)
         </View>
       )}
 
-      {maxItems && allFiltered.length > maxItems && (
+      {maxItems && allResults.length > maxItems && (
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={() => router.push("/(member)/results")}

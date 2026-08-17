@@ -23,6 +23,10 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const cardWidth = screenWidth - 40;
 
+  if (banners.length === 0) {
+    return null;
+  }
+
   return (
     <View className="mt-4">
       <View
