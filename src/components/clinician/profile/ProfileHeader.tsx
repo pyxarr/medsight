@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -6,14 +6,30 @@ interface ProfileHeaderProps {
   name: string;
   handle: string;
   avatarUrl?: string;
+  verified?: boolean;
   onEditPress?: () => void;
+  onAvatarPress?: () => void;
+  isAvatarUploading?: boolean;
 }
 
-export function ProfileHeader({ name, handle, avatarUrl, onEditPress }: ProfileHeaderProps) {
+export function ProfileHeader({
+  name,
+  handle,
+  avatarUrl,
+  verified = false,
+  onEditPress,
+  onAvatarPress,
+  isAvatarUploading = false,
+}: ProfileHeaderProps) {
   return (
     <View className="items-center pt-4 pb-6">
       {/* Avatar */}
-      <View className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 mb-4">
+      <TouchableOpacity
+        onPress={onAvatarPress}
+        disabled={isAvatarUploading || !onAvatarPress}
+        activeOpacity={0.8}
+        className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 mb-4"
+      >
         {avatarUrl ? (
           <Image
             source={{ uri: avatarUrl }}
@@ -25,12 +41,17 @@ export function ProfileHeader({ name, handle, avatarUrl, onEditPress }: ProfileH
             <Ionicons name="person" size={40} color="#9CA3AF" />
           </View>
         )}
-      </View>
+        {isAvatarUploading && (
+          <View className="absolute inset-0 items-center justify-center bg-black/40">
+            <ActivityIndicator color="white" />
+          </View>
+        )}
+      </TouchableOpacity>
 
       {/* Name + verified badge */}
       <View className="flex-row items-center gap-2 mb-1">
         <Text className="text-xl font-bold text-gray-900">{name}</Text>
-        <Ionicons name="checkmark-circle" size={20} color="#2563EB" />
+        {verified && <Ionicons name="checkmark-circle" size={20} color="#2563EB" />}
       </View>
 
       {/* Handle */}

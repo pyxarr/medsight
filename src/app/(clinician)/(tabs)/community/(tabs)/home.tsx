@@ -11,13 +11,14 @@ import {
 import { useRouter, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { FlashList, type FlashListRef } from "@shopify/flash-list";
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ClinicianShell } from "@/components/ClinicianShell";
 import { CommunityHeader } from "@/components/community/CommunityHeader";
 import { PostCard } from "@/components/community/PostCard";
-import { ClinicianShell } from "@/components/ClinicianShell";
 import { useCommunityRealtime } from "@/hooks/useCommunityRealtime";
 import { useOptimisticReactions } from "@/hooks/useOptimisticReactions";
 import { getFeed, getFollowingFeed, deletePost } from "@/services/communityService";
+import { getCurrentUserProfile } from "@/services/userService";
 import { useAuthStore } from "@/store/authStore";
 import { useUIStore } from "@/store/uiStore";
 import type { CommunityPost } from "@/types/community";
@@ -33,6 +34,15 @@ export default function CommunityFeed() {
   const { setIsInCommunity } = useUIStore();
   const hasMountedRef = useRef(false);
   const flashListRef = useRef<FlashListRef<CommunityPost>>(null);
+
+  const { data: profile } = useQuery({
+    queryKey: ["user", "profile"],
+    queryFn: async () => {
+      if (!token) throw new Error("No authentication token available");
+      return await getCurrentUserProfile(token);
+    },
+    enabled: !!token,
+  });
 
   useCommunityRealtime(() => {
     if (activeTab === "foryou") {
@@ -217,6 +227,7 @@ export default function CommunityFeed() {
             }
             onDelete={() => handleDelete(item.id)}
             isAuthor={session?.user?.id === item.author.id}
+            currentUserAvatar={profile?.avatar_url ?? undefined}
             isLikedOverride={getIsLiked(
               item.id,
               item.reaction_counts.is_liked
@@ -252,6 +263,7 @@ export default function CommunityFeed() {
             <CommunityHeader
               onAvatarPress={() => setIsMenuOpen((prev) => !prev)}
               role="clinician"
+              avatarUrl={profile?.avatar_url ?? undefined}
             />
             <View className="px-5 pt-2 pb-4">
               <View className="flex-row items-center justify-center gap-6 border-b border-gray-100">

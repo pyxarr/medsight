@@ -19,6 +19,7 @@ interface PostCardProps {
   bookmarkCountOverride?: number;
   isAuthor?: boolean;
   role?: "member" | "clinician";
+  currentUserAvatar?: string;
 }
 
 const ACCENT: Record<"member" | "clinician", string> = {
@@ -40,6 +41,7 @@ export function PostCard({
   bookmarkCountOverride,
   isAuthor,
   role = "clinician",
+  currentUserAvatar,
 }: PostCardProps) {
   const accentColor = ACCENT[role];
   const router = useRouter();
@@ -50,6 +52,7 @@ export function PostCard({
   const isBookmarked = isBookmarkedOverride ?? post.reaction_counts.is_bookmarked;
   const likeCount = likeCountOverride ?? post.reaction_counts.like_count;
   const repostCount = repostCountOverride ?? post.reaction_counts.repost_count;
+  const authorAvatarUrl = post.author.avatar_url || (isAuthor ? currentUserAvatar : undefined);
 
   const handlePress = () => {
     router.push(`/community/post/${post.id}` as any);
@@ -70,10 +73,10 @@ export function PostCard({
         {/* Header row */}
         <View className="flex-row items-center justify-between mb-3">
           <View className="flex-row items-center gap-3 flex-1">
-            {post.author.avatar_url ? (
+            {authorAvatarUrl ? (
               <Image
-                source={{ uri: post.author.avatar_url }}
-                className="w-10 h-10 rounded-full"
+                source={{ uri: authorAvatarUrl }}
+                style={{ width: 40, height: 40, borderRadius: 999 }}
                 contentFit="cover"
               />
             ) : (
@@ -85,7 +88,7 @@ export function PostCard({
                <Text className="text-sm font-semibold text-gray-900">
                  {post.author.display_name}
                </Text>
-               {post.author.role === "clinician" && (
+               {post.author.role === "clinician" && post.author.is_verified && (
                  <Ionicons name="checkmark-circle" size={14} color="#2563EB" />
                )}
                <Text className="text-gray-400 font-normal text-sm"> @{post.author.username}</Text>

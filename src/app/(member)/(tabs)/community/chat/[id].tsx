@@ -90,7 +90,7 @@ export default function CommunityChatConversation() {
         {!isMe && (
           <Image 
             source={{ uri: MOCK_USER.avatarUrl }} 
-            className="w-8 h-8 rounded-full mr-2" 
+            style={{ width: 32, height: 32, borderRadius: 999, marginRight: 8 }} 
             contentFit="cover"
           />
         )}
@@ -115,7 +115,7 @@ export default function CommunityChatConversation() {
         {isMe && (
           <Image 
             source={{ uri: "https://randomuser.me/api/portraits/men/1.jpg" }} 
-            className="w-8 h-8 rounded-full ml-2" 
+            style={{ width: 32, height: 32, borderRadius: 999, marginLeft: 8 }} 
             contentFit="cover"
           />
         )}
@@ -140,7 +140,7 @@ export default function CommunityChatConversation() {
         <View className="items-center my-8">
           <Image 
             source={{ uri: MOCK_USER.avatarUrl }} 
-            className="w-32 h-32 rounded-full mb-4" 
+            style={{ width: 128, height: 128, borderRadius: 999, marginBottom: 16 }} 
             contentFit="cover"
           />
           <View className="flex-row items-center gap-1">

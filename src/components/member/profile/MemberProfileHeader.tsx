@@ -1,18 +1,32 @@
-import { View, Text, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Image } from "expo-image";
+import { Ionicons } from "@expo/vector-icons";
 
 interface MemberProfileHeaderProps {
   name: string;
   handle: string;
   avatarUrl?: string;
   onEditPress?: () => void;
+  onAvatarPress?: () => void;
+  isAvatarUploading?: boolean;
 }
 
-export function MemberProfileHeader({ name, handle, avatarUrl, onEditPress }: MemberProfileHeaderProps) {
+export function MemberProfileHeader({
+  name,
+  handle,
+  avatarUrl,
+  onEditPress,
+  onAvatarPress,
+  isAvatarUploading = false,
+}: MemberProfileHeaderProps) {
   return (
     <View className="items-center pt-4 pb-6">
-      <View className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 mb-4">
+      <TouchableOpacity
+        onPress={onAvatarPress}
+        disabled={isAvatarUploading || !onAvatarPress}
+        activeOpacity={0.8}
+        className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 mb-4"
+      >
         {avatarUrl ? (
           <Image
             source={{ uri: avatarUrl }}
@@ -24,7 +38,12 @@ export function MemberProfileHeader({ name, handle, avatarUrl, onEditPress }: Me
             <Ionicons name="person" size={40} color="#9CA3AF" />
           </View>
         )}
-      </View>
+        {isAvatarUploading && (
+          <View className="absolute inset-0 items-center justify-center bg-black/40">
+            <ActivityIndicator color="white" />
+          </View>
+        )}
+      </TouchableOpacity>
 
       <Text className="text-xl font-bold text-gray-900 mb-1">{name}</Text>
 

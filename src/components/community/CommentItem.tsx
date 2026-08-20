@@ -48,7 +48,7 @@ export function CommentItem({
         {post.author.avatar_url ? (
           <Image
             source={{ uri: post.author.avatar_url }}
-            className="w-8 h-8 rounded-full"
+            style={{ width: 32, height: 32, borderRadius: 999 }}
             contentFit="cover"
           />
         ) : (
@@ -59,7 +59,7 @@ export function CommentItem({
          <View className="flex-row items-center gap-1.5 flex-1">
            <View className="flex-row items-center gap-1">
              <Text className="text-sm font-semibold text-gray-900">{post.author.display_name}</Text>
-             {post.author.role === "clinician" && (
+             {post.author.role === "clinician" && post.author.is_verified && (
                <Ionicons name="checkmark-circle" size={14} color="#2563EB" />
              )}
            </View>

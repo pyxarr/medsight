@@ -14,6 +14,7 @@ interface ClinicianShellProps {
   scrollable?: boolean;
   showHeader?: boolean;
   headerContent?: React.ReactNode;
+  justifyTop?: boolean;
 }
 
 export function ClinicianShell({
@@ -21,6 +22,7 @@ export function ClinicianShell({
   scrollable = true,
   showHeader = true,
   headerContent,
+  justifyTop = false,
 }: ClinicianShellProps) {
   const defaultHeader = (
     <View className="flex-row items-center gap-2.5 px-5 pt-4 pb-4">
@@ -35,7 +37,7 @@ export function ClinicianShell({
   const content = (
     <View style={{ flexGrow: 1, justifyContent: 'center' }}>
       {showHeader && (headerContent ?? defaultHeader)}
-      <View style={{ flex: 1, justifyContent: 'center' }}>
+      <View style={{ flex: 1, justifyContent: justifyTop ? 'flex-start' : 'center' }}>
         {children}
       </View>
     </View>

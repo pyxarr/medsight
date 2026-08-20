@@ -23,6 +23,7 @@ const MOCK_USER = {
   email: "micheal87scofield@gmail.com",
   following_count: 200,
   followers_count: 500,
+  role: "clinician",
   is_verified: true,
   is_following: false,
 };
@@ -164,7 +165,7 @@ export default function CommunityProfile() {
                 <View className="flex-row items-center gap-4 mb-4">
                   <Image
                     source={{ uri: MOCK_USER.avatar_url }}
-                    className="w-24 h-24 rounded-full"
+                    style={{ width: 96, height: 96, borderRadius: 999 }}
                     contentFit="cover"
                   />
                 </View>
@@ -173,7 +174,7 @@ export default function CommunityProfile() {
                 <View className="mb-4">
                   <View className="flex-row items-center gap-1">
                     <Text className="text-2xl font-bold text-gray-900">{MOCK_USER.display_name}</Text>
-                    {MOCK_USER.is_verified && (
+                    {MOCK_USER.role === "clinician" && MOCK_USER.is_verified && (
                       <Ionicons name="checkmark-circle" size={20} color="#2563EB" />
                     )}
                   </View>

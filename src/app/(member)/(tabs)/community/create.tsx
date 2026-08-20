@@ -15,9 +15,10 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { MemberShell } from "@/components/MemberShell";
 import { createPost } from "@/services/communityService";
+import { getCurrentUserProfile } from "@/services/userService";
 import { useAuthStore } from "@/store/authStore";
 import type { MediaFile } from "@/types/community";
 
@@ -43,7 +44,17 @@ function CreatePost() {
   const router = useRouter();
   const { session } = useAuthStore();
   const token = session?.access_token;
-  const userAvatar = session?.user?.user_metadata?.avatar_url;
+
+  const { data: profile } = useQuery({
+    queryKey: ["member", "profile", token],
+    queryFn: async () => {
+      if (!token) throw new Error("No authentication token available");
+      return await getCurrentUserProfile(token);
+    },
+    enabled: !!token,
+  });
+
+  const userAvatar = profile?.avatar_url ?? undefined;
 
   const [content, setContent] = useState("");
   const [selectedFile, setSelectedFile] = useState<MediaFile | null>(null);

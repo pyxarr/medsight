@@ -163,9 +163,9 @@ export default function MemberReportScreen() {
                 <Text className="text-xs text-gray-500 mt-2 leading-5">
                   Some of the information you provided is outside the typical range used in this assessment. This doesn't change your result, but it's good to know.
                 </Text>
-                {(report.ood_warning?.has_warning ?? false) && (report.ood_warning?.flagged_features ?? []).map((f) => (
+                {(report.ood_warning?.flagged_features ?? []).map((f, i, arr) => (
                   <Text key={f} className="font-semibold text-gray-900 mt-1">
-                    {f}{report.ood_warning.flagged_features.indexOf(f) < report.ood_warning.flagged_features.length - 1 && ", "}
+                    {f}{i < arr.length - 1 && ", "}
                   </Text>
                 ))}
               </View>

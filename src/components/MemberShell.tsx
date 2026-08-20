@@ -15,6 +15,7 @@ interface MemberShellProps {
   showHeader?: boolean;
   headerContent?: React.ReactNode;
   theme?: "default" | "main";
+  justifyTop?: boolean;
 }
 
 const GRADIENTS = {
@@ -28,6 +29,7 @@ export function MemberShell({
   showHeader = true,
   headerContent,
   theme = "default",
+  justifyTop = false,
 }: MemberShellProps) {
   const defaultHeader = (
     <View className="flex-row items-center gap-2.5 px-5 pt-4 pb-4">
@@ -42,7 +44,7 @@ export function MemberShell({
   const content = (
     <View style={{ flexGrow: 1, justifyContent: 'center' }}>
       {showHeader && (headerContent ?? defaultHeader)}
-      <View style={{ flex: 1, justifyContent: 'center' }}>
+      <View style={{ flex: 1, justifyContent: justifyTop ? 'flex-start' : 'center' }}>
         {children}
       </View>
     </View>
