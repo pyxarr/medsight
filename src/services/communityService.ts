@@ -8,6 +8,7 @@ import type {
   PostDetailResponse,
   CreatePostRequest,
   CreateReplyRequest,
+  PublicUserProfileResponse,
 } from "@/types/community";
 
 /**
@@ -114,6 +115,35 @@ export async function getBookmarks(limit = 20, offset = 0, token?: string): Prom
 
 export async function deletePost(postId: string, token: string): Promise<void> {
   return fetchApi<void>(`/api/community/posts/${postId}`, {
+    method: "DELETE",
+    token,
+  });
+}
+
+export async function getUserProfile(userId: string, token?: string): Promise<PublicUserProfileResponse> {
+  return fetchApi<PublicUserProfileResponse>(`/api/users/${userId}`, {
+    method: "GET",
+    token,
+  });
+}
+
+export async function getUserReplies(userId: string, limit = 20, offset = 0, token?: string): Promise<FeedResponse> {
+  return fetchApi<FeedResponse>(`/api/community/users/${userId}/replies`, {
+    method: "GET",
+    params: { limit, offset },
+    token,
+  });
+}
+
+export async function followUserProfile(userId: string, token: string): Promise<void> {
+  return fetchApi<void>(`/api/community/users/${userId}/follow`, {
+    method: "POST",
+    token,
+  });
+}
+
+export async function unfollowUserProfile(userId: string, token: string): Promise<void> {
+  return fetchApi<void>(`/api/community/users/${userId}/follow`, {
     method: "DELETE",
     token,
   });

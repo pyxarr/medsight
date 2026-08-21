@@ -1,116 +1,36 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Modal } from "react-native";
+import { View, Text, TouchableOpacity, Modal, ActivityIndicator } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
+import { useLocalSearchParams } from "expo-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PostCard } from "@/components/community/PostCard";
 import { MemberShell } from "@/components/MemberShell";
 import { useOptimisticReactions } from "@/hooks/useOptimisticReactions";
 import { useAuthStore } from "@/store/authStore";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deletePost } from "@/services/communityService";
-import type { CommunityPost } from "@/types/community";
+import { getUserProfile, getUserReplies, followUserProfile, unfollowUserProfile, getFeed, deletePost } from "@/services/communityService";
+import type { CommunityPost, FeedResponse, PublicUserProfileResponse } from "@/types/community";
 
-const MOCK_USER = {
-  id: "1",
-  display_name: "Dr. Micheal scofield",
-  username: "Micheal_234",
-  avatar_url: "https://randomuser.me/api/portraits/men/1.jpg",
-  bio: "Dedicated to supporting informed breast health care through compassion and clinical expertise.",
-  location: "Nigeria",
-  experience: "5+yrs",
-  specialization: "Oncologist",
-  email: "micheal87scofield@gmail.com",
-  following_count: 200,
-  followers_count: 500,
-  role: "clinician",
-  is_verified: true,
-  is_following: false,
+const getInitials = (name: string): string => {
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 };
 
-const MOCK_POSTS: CommunityPost[] = [
-  {
-    id: "p1",
-    content: "Still learning, still healing, still hopeful. Taking my breast health journey one day at a time",
-    created_at: new Date().toISOString(),
-    media_url: "",
-    view_count: 100,
-    author: {
-      id: "1",
-      display_name: "micheal scofield",
-      username: "Micheal_234",
-      avatar_url: "https://randomuser.me/api/portraits/men/1.jpg",
-      role: "Clinician",
-      is_verified: true,
-    },
-    reaction_counts: {
-      like_count: 29,
-      reply_count: 2,
-      repost_count: 10,
-      bookmark_count: 5,
-      is_liked: false,
-      is_reposted: false,
-      is_bookmarked: false,
-    },
-  },
-  {
-    id: "p2",
-    content: "Still learning, still healing, still hopeful. Taking my breast health journey one day at a time",
-    created_at: new Date().toISOString(),
-    media_url: "",
-    view_count: 100,
-    author: {
-      id: "1",
-      display_name: "micheal scofield",
-      username: "Micheal_234",
-      avatar_url: "https://randomuser.me/api/portraits/men/1.jpg",
-      role: "Clinician",
-      is_verified: true,
-    },
-    reaction_counts: {
-      like_count: 29,
-      reply_count: 2,
-      repost_count: 10,
-      bookmark_count: 5,
-      is_liked: false,
-      is_reposted: false,
-      is_bookmarked: false,
-    },
-  },
-  {
-    id: "p3",
-    content: "Another thought on breast cancer awareness. Early detection saves lives!",
-    created_at: new Date().toISOString(),
-    media_url: "",
-    view_count: 150,
-    author: {
-      id: "1",
-      display_name: "micheal scofield",
-      username: "Micheal_234",
-      avatar_url: "https://randomuser.me/api/portraits/men/1.jpg",
-      role: "Clinician",
-      is_verified: true,
-    },
-    reaction_counts: {
-      like_count: 45,
-      reply_count: 8,
-      repost_count: 12,
-      bookmark_count: 10,
-      is_liked: false,
-      is_reposted: false,
-      is_bookmarked: false,
-    },
-  },
-];
-
 export default function CommunityProfile() {
+  const params = useLocalSearchParams<{ id?: string | string[] }>();
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const [activeTab, setActiveTab] = useState<"posts" | "replies">("posts");
-  const [isFollowing, setIsFollowing] = useState(MOCK_USER.is_following);
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  const { session } = useAuthStore();
+  const { session, user } = useAuthStore();
   const token = session?.access_token;
+  const currentUserId = user?.id;
 
   const {
     handleLike,
@@ -124,6 +44,42 @@ export default function CommunityProfile() {
     getBookmarkCount,
   } = useOptimisticReactions({ token });
 
+  const { data: profile, isLoading, isError, error } = useQuery<PublicUserProfileResponse>({
+    queryKey: ["user-profile", id],
+    queryFn: () => getUserProfile(id!, token),
+    enabled: !!id && !!token,
+  });
+
+  const followMutation = useMutation({
+    mutationFn: () => {
+      if (!token || !profile) throw new Error("Missing token or profile");
+      if (currentUserId === profile.id) return Promise.resolve();
+      return profile.is_following ? unfollowUserProfile(profile.id, token) : followUserProfile(profile.id, token);
+    },
+    onMutate: async () => {
+      if (!profile) return;
+      await queryClient.cancelQueries({ queryKey: ["user-profile", id] });
+      const previousProfile = queryClient.getQueryData<PublicUserProfileResponse>(["user-profile", id]);
+      queryClient.setQueryData<PublicUserProfileResponse>(["user-profile", id], (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          is_following: !old.is_following,
+          followers_count: old.is_following ? old.followers_count - 1 : old.followers_count + 1,
+        };
+      });
+      return { previousProfile };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousProfile) {
+        queryClient.setQueryData(["user-profile", id], context.previousProfile);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-profile", id] });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (postId: string) => {
       if (!token) throw new Error("Unauthenticated");
@@ -134,93 +90,167 @@ export default function CommunityProfile() {
     },
   });
 
+  const userPosts = useQuery<FeedResponse>({
+    queryKey: ["user-posts", id],
+    queryFn: () => {
+      if (!id) throw new Error("Missing user id");
+      return getFeed(50, 0, token);
+    },
+    enabled: !!id && !!token,
+  });
+
+  const userReplies = useQuery<FeedResponse>({
+    queryKey: ["user-replies", id],
+    queryFn: () => {
+      if (!id) throw new Error("Missing user id");
+      return getUserReplies(id, 20, 0, token);
+    },
+    enabled: !!id && !!token && activeTab === "replies",
+  });
+
+  if (isLoading) {
+    return (
+      <MemberShell showHeader={false} scrollable={false}>
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#2563EB" />
+        </View>
+      </MemberShell>
+    );
+  }
+
+  if (isError || !profile) {
+    return (
+      <MemberShell showHeader={false} scrollable={false}>
+        <View className="flex-1 items-center justify-center px-6">
+          <Text className="text-center text-red-500 mb-4">
+            Failed to load profile: {error instanceof Error ? error.message : "Unknown error"}
+          </Text>
+          <TouchableOpacity
+            onPress={() => queryClient.invalidateQueries({ queryKey: ["user-profile", id] })}
+            className="px-6 py-3 bg-blue-600 rounded-xl"
+          >
+            <Text className="text-white font-semibold">Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </MemberShell>
+    );
+  }
+
+  const isOwnProfile = currentUserId === profile.id;
+  const showVerifiedBadge = profile.role === "clinician" && profile.is_verified;
+
+  const detailRows = [
+    { label: "Institution", value: profile.institution },
+    { label: "Specialisation", value: profile.specialisation },
+    { label: "Experience", value: profile.experience_years ? `${profile.experience_years} years` : null },
+    { label: "Location", value: profile.location },
+    { label: "Email", value: profile.email },
+  ].filter((row) => row.value !== null);
+
+  const filteredPosts: CommunityPost[] = userPosts.data?.results.filter((post) => post.author.id === profile.id) ?? [];
+  const activePosts: CommunityPost[] = activeTab === "replies" ? (userReplies.data?.results ?? []) : filteredPosts;
+
   return (
     <MemberShell showHeader={false} scrollable={false}>
       <View className="flex-1">
         <View className="flex-1">
           <FlashList
-            data={MOCK_POSTS}
+            data={activePosts}
             ListHeaderComponent={
               <View className="px-5 pt-6 pb-4">
                 {/* Profile Header Actions */}
                 <View className="flex-row justify-end items-center gap-3 mb-6">
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     className="w-10 h-10 rounded-full border border-gray-200 items-center justify-center"
                     activeOpacity={0.7}
                   >
                     <Ionicons name="chatbubble-outline" size={22} color="#374151" />
                   </TouchableOpacity>
-                  <TouchableOpacity 
-                    onPress={() => setIsFollowing(!isFollowing)}
-                    className={`px-6 py-2 rounded-full ${isFollowing ? "bg-gray-100" : "bg-blue-600"}`}
-                    activeOpacity={0.7}
-                  >
-                    <Text className={`font-semibold ${isFollowing ? "text-gray-700" : "text-white"}`}>
-                      {isFollowing ? "Following" : "Follow"}
-                    </Text>
-                  </TouchableOpacity>
+                  {!isOwnProfile && (
+                    <TouchableOpacity
+                      onPress={() => followMutation.mutate()}
+                      disabled={followMutation.isPending}
+                      className={`px-6 py-2 rounded-full ${profile.is_following ? "bg-gray-100" : "bg-blue-600"}`}
+                      activeOpacity={0.7}
+                    >
+                      <Text className={`font-semibold ${profile.is_following ? "text-gray-700" : "text-white"}`}>
+                        {profile.is_following ? "Following" : "Follow"}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
 
                 {/* Profile Image */}
                 <View className="flex-row items-center gap-4 mb-4">
-                  <Image
-                    source={{ uri: MOCK_USER.avatar_url }}
-                    style={{ width: 96, height: 96, borderRadius: 999 }}
-                    contentFit="cover"
-                  />
+                  <View style={{ width: 96, height: 96, borderRadius: 999, overflow: "hidden", backgroundColor: "#E5E7EB" }}>
+                    {profile.avatar_url ? (
+                      <Image
+                        source={{ uri: profile.avatar_url }}
+                        style={{ width: 96, height: 96 }}
+                        contentFit="cover"
+                      />
+                    ) : (
+                      <View className="flex-1 items-center justify-center">
+                        <Text className="text-4xl font-bold text-gray-400">{getInitials(profile.display_name)}</Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
 
                 {/* User Info */}
                 <View className="mb-4">
                   <View className="flex-row items-center gap-1">
-                    <Text className="text-2xl font-bold text-gray-900">{MOCK_USER.display_name}</Text>
-                    {MOCK_USER.role === "clinician" && MOCK_USER.is_verified && (
-                      <Ionicons name="checkmark-circle" size={20} color="#2563EB" />
-                    )}
+                    <Text className="text-2xl font-bold text-gray-900">{profile.display_name}</Text>
+                    {showVerifiedBadge && <Ionicons name="checkmark-circle" size={20} color="#2563EB" />}
                   </View>
-                  <Text className="text-gray-500 text-base mb-3">@{MOCK_USER.username}</Text>
-                  <Text className="text-gray-700 text-base leading-6 mb-4">
-                    {MOCK_USER.bio}
-                  </Text>
+                  <Text className="text-gray-500 text-base mb-3">@{profile.username}</Text>
 
                   {/* Stats */}
                   <View className="flex-row gap-6 mb-6">
                     <View className="flex-row items-baseline gap-1">
-                      <Text className="text-lg font-bold text-gray-900">{MOCK_USER.following_count}</Text>
+                      <Text className="text-lg font-bold text-gray-900">{profile.following_count}</Text>
                       <Text className="text-gray-500">Following</Text>
                     </View>
                     <View className="flex-row items-baseline gap-1">
-                      <Text className="text-lg font-bold text-gray-900">{MOCK_USER.followers_count}</Text>
+                      <Text className="text-lg font-bold text-gray-900">{profile.followers_count}</Text>
                       <Text className="text-gray-500">Followers</Text>
                     </View>
                   </View>
 
                   {/* Details Grid */}
-                  <View className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-6">
-                    <View className="flex-row flex-wrap justify-between gap-y-3">
-                      <View className="flex-row items-center gap-2 w-1/2">
-                        <Ionicons name="location-outline" size={16} color="#6B7280" />
-                        <Text className="text-gray-600 text-sm">{MOCK_USER.location}</Text>
-                      </View>
-                      <View className="flex-row items-center gap-2 w-1/2">
-                        <Ionicons name="time-outline" size={16} color="#6B7280" />
-                        <Text className="text-gray-600 text-sm">{MOCK_USER.experience}</Text>
-                      </View>
-                      <View className="flex-row items-center gap-2 w-1/2 mt-2">
-                        <Ionicons name="person-outline" size={16} color="#6B7280" />
-                        <Text className="text-gray-600 text-sm">{MOCK_USER.specialization}</Text>
-                      </View>
-                      <View className="flex-row items-center gap-2 w-1/2 mt-2">
-                        <Ionicons name="mail-outline" size={16} color="#6B7280" />
-                        <Text className="text-gray-600 text-sm" numberOfLines={1}>{MOCK_USER.email}</Text>
+                  {detailRows.length > 0 && (
+                    <View className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-6">
+                      <View className="flex-row flex-wrap justify-between gap-y-3">
+                        {detailRows.map((row, index) => (
+                          <View key={index} className="flex-row items-center gap-2 w-1/2">
+                            <Ionicons
+                              name={
+                                row.label === "Institution"
+                                  ? "business-outline"
+                                : row.label === "Specialisation"
+                                  ? "person-outline"
+                                : row.label === "Experience"
+                                  ? "time-outline"
+                                : row.label === "Location"
+                                  ? "location-outline"
+                                  : "mail-outline"
+                              }
+                              size={16}
+                              color="#6B7280"
+                            />
+                            <Text className="text-gray-600 text-sm" numberOfLines={1}>
+                              {row.value}
+                            </Text>
+                          </View>
+                        ))}
                       </View>
                     </View>
-                  </View>
+                  )}
                 </View>
 
                 {/* Tab Switcher */}
                 <View className="flex-row items-center gap-6 border-b border-gray-100 mb-4">
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={() => setActiveTab("posts")}
                     className={`pb-3 ${activeTab === "posts" ? "border-b-2 border-blue-600" : ""}`}
                   >
@@ -228,7 +258,7 @@ export default function CommunityProfile() {
                       Posts
                     </Text>
                   </TouchableOpacity>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={() => setActiveTab("replies")}
                     className={`pb-3 ${activeTab === "replies" ? "border-b-2 border-blue-600" : ""}`}
                   >
@@ -288,6 +318,7 @@ export default function CommunityProfile() {
                 />
               </View>
             )}
+            keyExtractor={(item) => item.id}
           />
         </View>
       </View>

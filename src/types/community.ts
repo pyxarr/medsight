@@ -82,3 +82,20 @@ export interface CreateReplyRequest {
   content: string;
   file?: MediaFile;
 }
+
+export interface PublicUserProfileResponse {
+  id: string;
+  display_name: string;
+  username: string;
+  avatar_url: string | null;
+  role: string;
+  is_verified: boolean;
+  institution: string | null;
+  specialisation: string | null;
+  experience_years: number | null;
+  location: string | null;
+  email: string | null;
+  followers_count: number;
+  following_count: number;
+  is_following: boolean;
+}
