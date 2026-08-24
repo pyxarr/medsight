@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { 
   View, 
   Text, 
@@ -7,14 +7,21 @@ import {
   FlatList, 
   KeyboardAvoidingView, 
   Platform,
+  ActivityIndicator,
   Alert
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ClinicianShell } from "@/components/ClinicianShell";
+import { useConversation, useMarkRead, useMessages, useSendMessage } from "@/hooks/useChat";
+import { useChatRealtime } from "@/hooks/useChatRealtime";
+import { getUserProfile } from "@/services/communityService";
+import { getCurrentUserProfile } from "@/services/userService";
+import { useAuthStore } from "@/store/authStore";
 
 interface Message {
   id: string;
@@ -25,25 +32,114 @@ interface Message {
   mediaType?: "image" | "video";
 }
 
-const MOCK_MESSAGES: Message[] = [
-  {
-    id: "m1",
-    text: "How can i help you",
-    senderId: "receiver",
-    timestamp: "10:00 AM",
-  },
-];
+interface PickedMedia {
+  uri: string;
+  type: "image" | "video";
+}
 
-const MOCK_USER = {
-  name: "janet",
-  avatarUrl: "https://randomuser.me/api/portraits/women/2.jpg",
-  isVerified: true,
-};
+function formatMessageTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
 
 export default function CommunityChatConversation() {
-  const { id: _id } = useLocalSearchParams();
+  const params = useLocalSearchParams<{ id?: string | string[] }>();
+  const conversationId = Array.isArray(params.id) ? params.id[0] : params.id;
   const router = useRouter();
   const [message, setMessage] = useState("");
+  const [pickedMedia, setPickedMedia] = useState<PickedMedia | null>(null);
+  const flatListRef = useRef<FlatList<Message>>(null);
+  const markedConversationRef = useRef<string | null>(null);
+
+  const { session, user, isLoading: isAuthLoading } = useAuthStore();
+  const currentUserId = user?.id;
+  const token = session?.access_token;
+  const currentUserProfileQuery = useQuery({
+    queryKey: ["chat", "me", token],
+    queryFn: () => {
+      if (!token) throw new Error("Missing token");
+      return getCurrentUserProfile(token);
+    },
+    enabled: !!token,
+  });
+
+  const conversationQuery = useConversation(conversationId);
+  const messagesQuery = useMessages(conversationId);
+  const sendMessageMutation = useSendMessage(conversationId);
+  const markReadMutation = useMarkRead(conversationId);
+
+  useChatRealtime(conversationId, currentUserId);
+
+  const otherParticipantIdFromMessages = useMemo(() => {
+    const messageResponses = messagesQuery.data?.pages.flatMap((page) => page.results) ?? [];
+    return messageResponses.find((item) => item.sender_user_id !== currentUserId)?.sender_user_id ?? null;
+  }, [messagesQuery.data, currentUserId]);
+
+  const shouldFetchParticipantProfile =
+    !!token &&
+    !!conversationId &&
+    !!otherParticipantIdFromMessages &&
+    conversationQuery.data?.other_participant.id === currentUserId;
+
+  const otherParticipantProfileQuery = useQuery({
+    queryKey: ["chat", "participant", conversationId, otherParticipantIdFromMessages],
+    queryFn: () => {
+      if (!token || !otherParticipantIdFromMessages) throw new Error("Missing participant id");
+      return getUserProfile(otherParticipantIdFromMessages, token);
+    },
+    enabled: shouldFetchParticipantProfile,
+  });
+
+  useEffect(() => {
+    if (!conversationId || !conversationQuery.data || conversationQuery.data.unread_count <= 0) return;
+    if (markedConversationRef.current === conversationId) return;
+
+    markReadMutation.mutate();
+    markedConversationRef.current = conversationId;
+  }, [conversationId, conversationQuery.data, markReadMutation]);
+
+  const messages: Message[] = useMemo(() => {
+    const messageResponses = messagesQuery.data?.pages.flatMap((page) => page.results) ?? [];
+
+    return messageResponses.map((item) => ({
+      id: item.id,
+      text: item.content,
+      senderId: item.sender_user_id === currentUserId ? "sender" : "receiver",
+      timestamp: formatMessageTime(item.created_at),
+      mediaUrl: item.media_url ?? undefined,
+      mediaType: item.media_type === "video" ? "video" : item.media_type === "image" ? "image" : undefined,
+    }));
+  }, [messagesQuery.data, currentUserId]);
+
+  const resolvedOtherParticipant = otherParticipantProfileQuery.data ?? conversationQuery.data?.other_participant;
+  const conversationParticipant = conversationQuery.data?.other_participant;
+
+  const handleSend = () => {
+    const content = message.trim();
+    if (!content && !pickedMedia) return;
+
+    sendMessageMutation.mutate(
+      {
+        content,
+        mediaUrl: pickedMedia?.uri,
+        mediaType: pickedMedia?.type,
+      },
+      {
+        onSuccess: () => {
+          setMessage("");
+          setPickedMedia(null);
+          requestAnimationFrame(() => {
+            flatListRef.current?.scrollToEnd({ animated: true });
+          });
+        },
+      },
+    );
+  };
 
   const handleCameraPress = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -59,7 +155,11 @@ export default function CommunityChatConversation() {
     });
 
     if (!result.canceled) {
-      console.log("Captured media:", result.assets[0].uri);
+      const asset = result.assets[0];
+      setPickedMedia({
+        uri: asset.uri,
+        type: asset.type === "video" ? "video" : "image",
+      });
       Alert.alert("Media Captured", `Captured: ${result.assets[0].type}`);
     }
   };
@@ -78,24 +178,34 @@ export default function CommunityChatConversation() {
     });
 
     if (!result.canceled) {
-      console.log("Picked media:", result.assets[0].uri);
+      const asset = result.assets[0];
+      setPickedMedia({
+        uri: asset.uri,
+        type: asset.type === "video" ? "video" : "image",
+      });
       Alert.alert("Media Selected", `Selected: ${result.assets[0].type}`);
     }
   };
 
   const renderMessage = ({ item }: { item: Message }) => {
-    const isMe = item.senderId === "me";
+    const isMe = item.senderId === "sender";
     return (
-      <View className={`flex-row ${isMe ? "justify-end" : "justify-start"} mb-4 px-4`}>
+      <View className={`flex-row ${isMe ? "justify-end" : "justify-start"} mb-4 px-3`}>
         {!isMe && (
-          <Image 
-            source={{ uri: MOCK_USER.avatarUrl }} 
-            style={{ width: 32, height: 32, borderRadius: 999, marginRight: 8 }} 
-            contentFit="cover"
-          />
+          resolvedOtherParticipant?.avatar_url ? (
+            <Image 
+              source={{ uri: resolvedOtherParticipant.avatar_url }} 
+              style={{ width: 30, height: 30, borderRadius: 999, marginRight: 8 }} 
+              contentFit="cover"
+            />
+          ) : (
+            <View className="w-[30px] h-[30px] rounded-full bg-gray-200 items-center justify-center mr-2">
+              <Ionicons name="person" size={15} color="#9CA3AF" />
+            </View>
+          )
         )}
         <View 
-          className={`max-w-[75%] p-3 rounded-2xl ${
+          className={`max-w-[78%] px-4 py-3 rounded-2xl ${
             isMe 
               ? "bg-blue-600 rounded-tr-none" 
               : "bg-gray-100 rounded-tl-none"
@@ -113,50 +223,107 @@ export default function CommunityChatConversation() {
           </Text>
         </View>
         {isMe && (
-          <Image 
-            source={{ uri: "https://randomuser.me/api/portraits/men/1.jpg" }} 
-            style={{ width: 32, height: 32, borderRadius: 999, marginLeft: 8 }} 
-            contentFit="cover"
-          />
+          currentUserProfileQuery.data?.avatar_url ? (
+            <Image 
+              source={{ uri: currentUserProfileQuery.data.avatar_url }} 
+              style={{ width: 30, height: 30, borderRadius: 999, marginLeft: 8 }} 
+              contentFit="cover"
+            />
+          ) : (
+            <View className="w-[30px] h-[30px] rounded-full bg-gray-200 items-center justify-center ml-2">
+              <Ionicons name="person" size={15} color="#9CA3AF" />
+            </View>
+          )
         )}
       </View>
     );
   };
 
+  const chatHeader = (
+    <View className="px-4 pt-4 pb-2">
+      <TouchableOpacity
+        onPress={() => router.back()}
+        className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center"
+      >
+        <Ionicons name="chevron-back" size={24} color="#374151" />
+      </TouchableOpacity>
+
+      <View className="items-center pt-6 pb-4">
+        {resolvedOtherParticipant?.avatar_url ? (
+          <Image
+            source={{ uri: resolvedOtherParticipant.avatar_url }}
+            style={{ width: 112, height: 112, borderRadius: 999, marginBottom: 14 }}
+            contentFit="cover"
+          />
+        ) : (
+          <View className="w-28 h-28 rounded-full bg-gray-200 items-center justify-center mb-4">
+            <Ionicons name="person" size={44} color="#9CA3AF" />
+          </View>
+        )}
+        <View className="flex-row items-center gap-1">
+          <Text className="text-2xl font-bold text-gray-900">
+            {resolvedOtherParticipant?.display_name ?? conversationParticipant?.display_name ?? "Conversation"}
+          </Text>
+          {(resolvedOtherParticipant?.role ?? conversationParticipant?.role) === "clinician" &&
+            (resolvedOtherParticipant?.is_verified ?? conversationParticipant?.is_verified) && (
+              <Ionicons name="checkmark-circle" size={20} color="#2563EB" />
+            )}
+        </View>
+      </View>
+    </View>
+  );
+
+  const isLoading =
+    isAuthLoading ||
+    !conversationId ||
+    conversationQuery.isLoading ||
+    messagesQuery.isLoading ||
+    currentUserProfileQuery.isLoading ||
+    (shouldFetchParticipantProfile && otherParticipantProfileQuery.isLoading);
+  const isError =
+    conversationQuery.isError ||
+    messagesQuery.isError ||
+    !conversationQuery.data ||
+    currentUserProfileQuery.isError ||
+    otherParticipantProfileQuery.isError;
+
+  if (isLoading) {
+    return (
+      <ClinicianShell showHeader={false} scrollable={false}>
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#2563EB" />
+        </View>
+      </ClinicianShell>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ClinicianShell showHeader={false} scrollable={false}>
+        <View className="flex-1 items-center justify-center px-6">
+          <Text className="text-center text-red-500">
+            {conversationId ? "Failed to load conversation." : "Missing conversation id."}
+          </Text>
+        </View>
+      </ClinicianShell>
+    );
+  }
+
   return (
     <ClinicianShell showHeader={false} scrollable={false}>
       <SafeAreaView className="flex-1">
-        {/* Header */}
-        <View className="px-4 pt-4 flex-row items-center">
-          <TouchableOpacity 
-            onPress={() => router.back()} 
-            className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center"
-          >
-            <Ionicons name="chevron-back" size={24} color="#374151" />
-          </TouchableOpacity>
-        </View>
-
-        {/* User Profile Section */}
-        <View className="items-center my-8">
-          <Image 
-            source={{ uri: MOCK_USER.avatarUrl }} 
-            style={{ width: 128, height: 128, borderRadius: 999, marginBottom: 16 }} 
-            contentFit="cover"
-          />
-          <View className="flex-row items-center gap-1">
-            <Text className="text-2xl font-bold text-gray-900">{MOCK_USER.name}</Text>
-            {MOCK_USER.isVerified && (
-              <Ionicons name="checkmark-circle" size={20} color="#2563EB" />
-            )}
-          </View>
-        </View>
-
-        {/* Messages List */}
         <FlatList
-          data={MOCK_MESSAGES}
+          ref={flatListRef}
+          data={messages}
           keyExtractor={(item) => item.id}
           renderItem={renderMessage}
-          contentContainerStyle={{ paddingVertical: 20 }}
+          ListHeaderComponent={chatHeader}
+          ListEmptyComponent={
+            <View className="items-center justify-center py-10 px-4">
+              <Text className="text-gray-500">No messages yet</Text>
+            </View>
+          }
+          contentContainerStyle={{ paddingBottom: 20 }}
           className="flex-1"
         />
 
@@ -164,28 +331,32 @@ export default function CommunityChatConversation() {
         <KeyboardAvoidingView 
           behavior={Platform.OS === "ios" ? "padding" : "height"} 
           keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-          className="px-4 pb-6 pt-2"
+          className="px-4 pb-4 pt-2"
         >
-          <View className="flex-row items-center gap-3 bg-white">
-            <View className="flex-1 flex-row items-center bg-gray-100 rounded-full px-4 py-2 border border-gray-200">
-              <TextInput 
-                className="flex-1 h-10 text-gray-900" 
-                placeholder="Type a message..." 
-                value={message}
-                onChangeText={setMessage}
-              />
-            </View>
-            <TouchableOpacity 
-              className="p-2" 
-              onPress={handleCameraPress}
-            >
-              <Ionicons name="camera-outline" size={24} color="#6B7280" />
+          <View className="flex-row items-end gap-2 rounded-3xl border border-gray-200 bg-white px-3 py-2 shadow-sm">
+            <TouchableOpacity className="p-2 rounded-full bg-gray-100" onPress={handleCameraPress}>
+              <Ionicons name="camera-outline" size={20} color="#6B7280" />
             </TouchableOpacity>
-            <TouchableOpacity 
-              className="p-2" 
-              onPress={handleGalleryPress}
+            <TouchableOpacity className="p-2 rounded-full bg-gray-100" onPress={handleGalleryPress}>
+              <Ionicons name="images-outline" size={20} color="#6B7280" />
+            </TouchableOpacity>
+            <TextInput
+              className="flex-1 min-h-[44px] max-h-28 px-2 py-2 text-base text-gray-900"
+              placeholder="Type a message..."
+              placeholderTextColor="#9CA3AF"
+              value={message}
+              onChangeText={setMessage}
+              multiline
+              textAlignVertical="top"
+            />
+            <TouchableOpacity
+              className={`h-11 w-11 rounded-full items-center justify-center ${
+                message.trim() || pickedMedia ? "bg-blue-600" : "bg-blue-300"
+              }`}
+              onPress={handleSend}
+              disabled={sendMessageMutation.isPending || (!message.trim() && !pickedMedia)}
             >
-              <Ionicons name="images-outline" size={24} color="#6B7280" />
+              <Ionicons name="send" size={18} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>

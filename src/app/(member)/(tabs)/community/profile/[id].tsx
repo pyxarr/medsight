@@ -1,16 +1,17 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, Modal, ActivityIndicator } from "react-native";
 import { Image } from "expo-image";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
-import { useLocalSearchParams } from "expo-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PostCard } from "@/components/community/PostCard";
 import { MemberShell } from "@/components/MemberShell";
 import { useOptimisticReactions } from "@/hooks/useOptimisticReactions";
-import { useAuthStore } from "@/store/authStore";
+import { startConversation } from "@/lib/api";
 import { getUserProfile, getUserReplies, followUserProfile, unfollowUserProfile, getFeed, deletePost } from "@/services/communityService";
-import type { CommunityPost, FeedResponse, PublicUserProfileResponse } from "@/types/community";
+import { useAuthStore } from "@/store/authStore";
+import type { CommunityPost, PublicUserProfileResponse } from "@/types/community";
 
 const getInitials = (name: string): string => {
   return name
@@ -24,6 +25,7 @@ const getInitials = (name: string): string => {
 export default function CommunityProfile() {
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"posts" | "replies">("posts");
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -90,23 +92,70 @@ export default function CommunityProfile() {
     },
   });
 
-  const userPosts = useQuery<FeedResponse>({
-    queryKey: ["user-posts", id],
-    queryFn: () => {
-      if (!id) throw new Error("Missing user id");
-      return getFeed(50, 0, token);
+  const startConversationMutation = useMutation({
+    mutationFn: async () => {
+      if (!token || !profile) throw new Error("Missing token or profile");
+      if (currentUserId === profile.id) return null;
+      return startConversation(token, profile.id);
     },
-    enabled: !!id && !!token,
+    onSuccess: (conversation) => {
+      if (!conversation) return;
+      router.push(`/(member)/(tabs)/community/chat/${conversation.id}` as any);
+    },
   });
 
-  const userReplies = useQuery<FeedResponse>({
-    queryKey: ["user-replies", id],
-    queryFn: () => {
+  const userPosts = useInfiniteQuery({
+    queryKey: ["user-posts", id],
+    queryFn: ({ pageParam = 0 }) => {
       if (!id) throw new Error("Missing user id");
-      return getUserReplies(id, 20, 0, token);
+      return getFeed(20, pageParam as number, token);
     },
-    enabled: !!id && !!token && activeTab === "replies",
+    initialPageParam: 0,
+    enabled: !!id && !!token,
+    getNextPageParam: (lastPage, pages) => {
+      const loaded = pages.reduce((count, page) => count + page.results.length, 0);
+      return loaded < lastPage.total ? loaded : undefined;
+    },
   });
+
+  const {
+    hasNextPage: userPostsHasNextPage,
+    isFetchingNextPage: userPostsIsFetchingNextPage,
+    fetchNextPage: fetchUserPostsNextPage,
+  } = userPosts;
+
+  const userReplies = useInfiniteQuery({
+    queryKey: ["user-replies", id],
+    queryFn: ({ pageParam = 0 }) => {
+      if (!id) throw new Error("Missing user id");
+      return getUserReplies(id, 20, pageParam as number, token);
+    },
+    initialPageParam: 0,
+    enabled: !!id && !!token && activeTab === "replies",
+    getNextPageParam: (lastPage, pages) => {
+      const loaded = pages.reduce((count, page) => count + page.results.length, 0);
+      return loaded < lastPage.total ? loaded : undefined;
+    },
+  });
+
+  const {
+    hasNextPage: userRepliesHasNextPage,
+    isFetchingNextPage: userRepliesIsFetchingNextPage,
+    fetchNextPage: fetchUserRepliesNextPage,
+  } = userReplies;
+
+  useEffect(() => {
+    if (userPostsHasNextPage && !userPostsIsFetchingNextPage) {
+      void fetchUserPostsNextPage();
+    }
+  }, [fetchUserPostsNextPage, userPostsHasNextPage, userPostsIsFetchingNextPage]);
+
+  useEffect(() => {
+    if (!activeTab || activeTab !== "replies") return;
+    if (userRepliesHasNextPage && !userRepliesIsFetchingNextPage) {
+      void fetchUserRepliesNextPage();
+    }
+  }, [activeTab, fetchUserRepliesNextPage, userRepliesHasNextPage, userRepliesIsFetchingNextPage]);
 
   if (isLoading) {
     return (
@@ -147,8 +196,10 @@ export default function CommunityProfile() {
     { label: "Email", value: profile.email },
   ].filter((row) => row.value !== null);
 
-  const filteredPosts: CommunityPost[] = userPosts.data?.results.filter((post) => post.author.id === profile.id) ?? [];
-  const activePosts: CommunityPost[] = activeTab === "replies" ? (userReplies.data?.results ?? []) : filteredPosts;
+  const allPosts = userPosts.data?.pages.flatMap((page) => page.results) ?? [];
+  const allReplies = userReplies.data?.pages.flatMap((page) => page.results) ?? [];
+  const filteredPosts: CommunityPost[] = allPosts.filter((post) => post.author.id === profile.id);
+  const activePosts: CommunityPost[] = activeTab === "replies" ? allReplies : filteredPosts;
 
   return (
     <MemberShell showHeader={false} scrollable={false}>
@@ -163,8 +214,14 @@ export default function CommunityProfile() {
                   <TouchableOpacity
                     className="w-10 h-10 rounded-full border border-gray-200 items-center justify-center"
                     activeOpacity={0.7}
+                    onPress={() => startConversationMutation.mutate()}
+                    disabled={startConversationMutation.isPending || isOwnProfile}
                   >
-                    <Ionicons name="chatbubble-outline" size={22} color="#374151" />
+                    <Ionicons
+                      name="chatbubble-outline"
+                      size={22}
+                      color={startConversationMutation.isPending || isOwnProfile ? "#9CA3AF" : "#374151"}
+                    />
                   </TouchableOpacity>
                   {!isOwnProfile && (
                     <TouchableOpacity

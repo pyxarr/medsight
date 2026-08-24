@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -13,11 +13,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "use-debounce";
 import { CommunitySearchBar } from "@/components/community/CommunitySearchBar";
 import { MemberShell } from "@/components/MemberShell";
+import { useRecentSearches } from "@/hooks/useRecentSearches";
 import { searchCommunity } from "@/services/communityService";
 import { useAuthStore } from "@/store/authStore";
 import type { AuthorInfo, CommunityPost } from "@/types/community";
-
-const RECENT_SEARCHES = ["@tnsal", "@mary014", "@its ola", "@tnsal"];
 
 type ListItem =
   | { type: "header"; label: string }
@@ -30,12 +29,33 @@ export default function CommunitySearch() {
   const token = session?.access_token;
   const [query, setQuery] = useState("");
   const [debouncedQuery] = useDebounce(query, 400);
+  const {
+    recentSearches,
+    isLoaded: isRecentSearchesLoaded,
+    addSearch,
+    removeSearch,
+    clearSearches,
+  } = useRecentSearches();
+  const normalizedQuery = debouncedQuery.trim();
+  const lastSavedQueryRef = useRef<string | null>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["community-search", debouncedQuery],
-    queryFn: () => searchCommunity(debouncedQuery, 20, token),
-    enabled: debouncedQuery.trim().length >= 1,
+    queryKey: ["community-search", normalizedQuery],
+    queryFn: () => searchCommunity(normalizedQuery, 20, token),
+    enabled: normalizedQuery.length >= 1,
   });
+
+  useEffect(() => {
+    if (normalizedQuery.length < 1) {
+      lastSavedQueryRef.current = null;
+      return;
+    }
+
+    if (!data || lastSavedQueryRef.current === normalizedQuery) return;
+
+    lastSavedQueryRef.current = normalizedQuery;
+    void addSearch(normalizedQuery);
+  }, [addSearch, data, normalizedQuery]);
 
   const listItems: ListItem[] = [
     ...(data && data.users.length > 0
@@ -59,24 +79,48 @@ export default function CommunitySearch() {
 
         {query.trim() === "" && (
           <View className="flex-1 px-5 mt-2">
-            <Text className="text-sm font-semibold text-gray-900 mb-3">
-              Recent Searches
-            </Text>
-            <FlatList
-              data={RECENT_SEARCHES}
-              keyExtractor={(item, index) => `${item}-${index}`}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  className="py-2.5 border-b border-gray-100"
-                  activeOpacity={0.7}
-                  onPress={() => setQuery(item)}
-                >
-                  <Text className="text-sm text-gray-600">{item}</Text>
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-sm font-semibold text-gray-900">
+                Recent Searches
+              </Text>
+              {recentSearches.length > 0 && (
+                <TouchableOpacity onPress={() => void clearSearches()} activeOpacity={0.7}>
+                  <Text className="text-xs font-medium text-gray-500">Clear all</Text>
                 </TouchableOpacity>
               )}
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-            />
+            </View>
+
+            {!isRecentSearchesLoaded ? (
+              <ActivityIndicator size="small" color="#2563EB" />
+            ) : recentSearches.length > 0 ? (
+              <View className="flex-row flex-wrap gap-2">
+                {recentSearches.map((item) => (
+                  <View
+                    key={item}
+                    className="flex-row items-center rounded-full border border-gray-200 bg-white px-3 py-2"
+                  >
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => setQuery(item)}
+                    >
+                      <Text className="text-sm text-gray-700">{item}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      className="ml-2"
+                      activeOpacity={0.7}
+                      onPress={() => void removeSearch(item)}
+                    >
+                      <Ionicons name="close-circle" size={16} color="#9CA3AF" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <View className="items-center justify-center py-10">
+                <Ionicons name="search-outline" size={40} color="#D1D5DB" />
+                <Text className="mt-3 text-sm text-gray-400">No recent searches</Text>
+              </View>
+            )}
           </View>
         )}
 

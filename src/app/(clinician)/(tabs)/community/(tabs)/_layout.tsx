@@ -1,9 +1,43 @@
+import { useEffect, useState } from "react";
 import { View, TouchableOpacity, Text, Platform } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { getUnreadNotificationCount } from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
 import type { BottomTabBarProps } from "expo-router/js-tabs";
 
 function CommunityTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const token = useAuthStore((state) => state.session?.access_token);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadUnreadCount = async () => {
+      if (!token) {
+        if (active) setUnreadCount(0);
+        return;
+      }
+
+      try {
+        const result = await getUnreadNotificationCount(token);
+        if (active) setUnreadCount(result.unread_count);
+      } catch {
+        if (active) setUnreadCount(0);
+      }
+    };
+
+    void loadUnreadCount();
+    const timer = setInterval(() => {
+      void loadUnreadCount();
+    }, 30000);
+
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [token]);
+
   const onPress = (route: any, isFocused: boolean) => {
     const event = navigation.emit({
       type: "tabPress",
@@ -67,12 +101,34 @@ function CommunityTabBar({ state, descriptors, navigation }: BottomTabBarProps) 
                 paddingHorizontal: 16,
                 paddingVertical: 6,
                 borderRadius: 16,
-                overflow: "hidden",
+                overflow: "visible",
                 backgroundColor: isFocused ? "#F3F4F6" : "transparent",
                 gap: 2,
               }}
             >
-              {renderIcon()}
+              <View style={{ position: "relative", alignItems: "center", justifyContent: "center" }}>
+                {renderIcon()}
+                {route.name === "notifications" && unreadCount > 0 ? (
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: -6,
+                      right: -12,
+                      minWidth: 18,
+                      height: 18,
+                      borderRadius: 9,
+                      backgroundColor: "#EF4444",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingHorizontal: 4,
+                    }}
+                  >
+                    <Text style={{ fontSize: 10, color: "#FFFFFF", fontWeight: "700" }}>
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
               <Text style={{ fontSize: 10, color }}>
                 {label}
               </Text>
