@@ -46,10 +46,13 @@ export async function getCurrentUserProfile(token: string): Promise<UserProfile>
  * Role and verification fields are not editable via this endpoint.
  */
 export interface ProfileUpdateRequest {
+  display_name?: string;
+  username?: string;
+  location?: string;
+  // Clinician-only (backend ignores for members):
   institution?: string;
   specialisation?: string;
   experience_years?: number;
-  location?: string;
 }
 
 /**
@@ -61,10 +64,12 @@ export async function updateProfile(
   token: string
 ): Promise<UserProfile> {
   const body: Record<string, unknown> = {};
+  if (fields.display_name !== undefined) body.display_name = fields.display_name;
+  if (fields.username !== undefined) body.username = fields.username;
+  if (fields.location !== undefined) body.location = fields.location;
   if (fields.institution !== undefined) body.institution = fields.institution;
   if (fields.specialisation !== undefined) body.specialisation = fields.specialisation;
   if (fields.experience_years !== undefined) body.experience_years = fields.experience_years;
-  if (fields.location !== undefined) body.location = fields.location;
 
   return await fetchApi<UserProfile>("/api/users/me", {
     method: "PATCH",
@@ -154,6 +159,13 @@ export interface AvatarFile {
   uri: string;
   name: string;
   mimeType: string;
+}
+
+/**
+ * Check if a username is available.
+ */
+export async function checkUsernameAvailability(username: string, token: string): Promise<{ available: boolean }> {
+  return fetchApi<{ available: boolean }>(`/api/users/check-username?username=${encodeURIComponent(username)}`, { token });
 }
 
 /**

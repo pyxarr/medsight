@@ -146,7 +146,7 @@ const handleLogout = async () => {
           name={profile?.display_name ?? "Loading..."}
           handle={profile?.username ? `@${profile.username}` : "Loading..."}
           avatarUrl={profile?.avatar_url ?? undefined}
-          onEditPress={() => Alert.alert("Coming soon", "Profile editing will be enabled once the backend contract is ready.")}
+          onEditPress={() => router.push("/(member)/edit-profile")}
           onAvatarPress={handleAvatarPress}
           isAvatarUploading={isAvatarUploading}
         />

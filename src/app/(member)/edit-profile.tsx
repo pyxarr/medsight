@@ -5,14 +5,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
-import { ClinicianShell } from "@/components/ClinicianShell";
+import { MemberShell } from "@/components/MemberShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { queryClient } from "@/context/QueryProvider";
 import { parseValidationErrors } from "@/lib/errors";
 import {
-  clinicianProfileSchema,
-  type ClinicianProfileFormData,
+  memberProfileSchema,
+  type MemberProfileFormData,
 } from "@/lib/validations/profile";
 import {
   updateProfile,
@@ -38,57 +38,33 @@ const FIELD_CONFIG = {
     placeholder: "e.g. Lagos, Nigeria",
     keyboardType: "default" as const,
   },
-  institution: {
-    label: "Institution",
-    placeholder: "e.g. Lagos University Teaching Hospital",
-    keyboardType: "default" as const,
-  },
-  specialisation: {
-    label: "Specialisation",
-    placeholder: "e.g. Oncology",
-    keyboardType: "default" as const,
-  },
-  experience_years: {
-    label: "Experience years",
-    placeholder: "e.g. 5",
-    keyboardType: "numeric" as const,
-  },
 } as const;
 
 type FieldKey = keyof typeof FIELD_CONFIG;
 
-function buildPayload(data: ClinicianProfileFormData): ProfileUpdateRequest {
+function buildPayload(data: MemberProfileFormData): ProfileUpdateRequest {
   return {
     display_name: data.display_name?.trim() || undefined,
     username: data.username?.trim() || undefined,
     location: data.location?.trim() || undefined,
-    institution: data.institution?.trim() || undefined,
-    specialisation: data.specialisation?.trim() || undefined,
-    experience_years: data.experience_years ? Number(data.experience_years) : undefined,
   };
 }
 
 export default function EditProfileScreen() {
   const token = useAuthStore((state) => state.session?.access_token);
-  const profile = queryClient.getQueryData<UserProfile>(["user", "profile"]);
+  const profile = queryClient.getQueryData<UserProfile>(["member", "profile", token]);
 
   const {
     control,
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<ClinicianProfileFormData>({
-    resolver: zodResolver(clinicianProfileSchema),
+  } = useForm<MemberProfileFormData>({
+    resolver: zodResolver(memberProfileSchema),
     defaultValues: {
       display_name: profile?.display_name ?? "",
       username: profile?.username ?? "",
       location: profile?.location ?? "",
-      institution: profile?.institution ?? "",
-      specialisation: profile?.specialisation ?? "",
-      experience_years:
-        profile?.experience_years !== null && profile?.experience_years !== undefined
-          ? String(profile.experience_years)
-          : "",
     },
   });
 
@@ -125,12 +101,12 @@ export default function EditProfileScreen() {
   }, [username, token, profile?.username]);
 
   const mutation = useMutation({
-    mutationFn: async (data: ClinicianProfileFormData) => {
+    mutationFn: async (data: MemberProfileFormData) => {
       if (!token) throw new Error("No authentication token available");
       return updateProfile(buildPayload(data), token);
     },
     onSuccess: (updatedProfile) => {
-      queryClient.setQueryData(["user", "profile"], updatedProfile);
+      queryClient.setQueryData(["member", "profile", token], updatedProfile);
       router.back();
     },
     onError: (error: unknown) => {
@@ -142,7 +118,7 @@ export default function EditProfileScreen() {
     },
   });
 
-  const onSubmit = (data: ClinicianProfileFormData) => {
+  const onSubmit = (data: MemberProfileFormData) => {
     if (usernameStatus === "taken") return;
     mutation.mutate(data);
   };
@@ -223,7 +199,7 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <ClinicianShell headerContent={Header} justifyTop>
+    <MemberShell headerContent={Header} theme="main" justifyTop>
       <View style={{ padding: 20, gap: 20 }}>
         <Text style={{ fontSize: 14, color: "#6B7280", marginBottom: 4 }}>
           Update your profile details. These are shown to other members
@@ -247,7 +223,7 @@ export default function EditProfileScreen() {
         <Button
           onPress={handleSubmit(onSubmit)}
           disabled={mutation.isPending || usernameStatus === "taken"}
-          className="mt-2 bg-[#2563EB]"
+          className="mt-2 bg-[#DB2777]"
         >
           {mutation.isPending ? (
             <View className="flex-row items-center justify-center gap-2">
@@ -263,6 +239,6 @@ export default function EditProfileScreen() {
           )}
         </Button>
       </View>
-    </ClinicianShell>
+    </MemberShell>
   );
 }

@@ -10,11 +10,14 @@ interface MemberProfileRowProps {
 }
 
 export function MemberProfileRow({ icon, label, onPress, showDot = false }: MemberProfileRowProps) {
+  const isInteractive = !!onPress;
+
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={isInteractive ? 0.7 : 1}
       className="flex-row items-center justify-between px-4 py-3.5"
+      disabled={!isInteractive}
     >
       <View className="flex-row items-center gap-3">
         <Ionicons name={icon} size={18} color="#9CA3AF" />
@@ -23,7 +26,9 @@ export function MemberProfileRow({ icon, label, onPress, showDot = false }: Memb
           <View className="w-1.5 h-1.5 rounded-full bg-red-500" />
         )}
       </View>
-      <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+      {isInteractive && (
+        <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+      )}
     </TouchableOpacity>
   );
 }
