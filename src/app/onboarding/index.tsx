@@ -9,6 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuthStore } from '@/store/authStore';
 
 const SLIDES = [
   {
@@ -37,6 +38,20 @@ const POST_TYPE_DELAY = 1000;
 
 export default function OnboardingSlides() {
   const router = useRouter();
+
+  const { session, role, isLoading } = useAuthStore();
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (session && role === "clinician") {
+      router.replace("/(clinician)/(tabs)" as any);
+      return;
+    }
+    if (session && role === "member") {
+      router.replace("/(member)/(tabs)" as any);
+      return;
+    }
+  }, [isLoading, session, role, router]);
 
   // Index of the image currently rendered on the top (visible) layer
   const [renderIndex, setRenderIndex] = useState(0);
