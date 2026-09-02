@@ -38,6 +38,7 @@
     "expo-file-system": "~56.0.7",
     "expo-font": "~56.0.5",
     "expo-glass-effect": "~56.0.4",
+    "expo-dev-client": "~56.0.26",
     "expo-image": "~56.0.11",
     "expo-image-picker": "^56.0.16",
     "expo-linear-gradient": "^56.0.4",
