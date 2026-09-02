@@ -18,7 +18,16 @@ interface MemberDrawerProps {
 }
 
 const ANALYTICS_ITEMS = ["Run Analytics", "Analysis result"] as const;
-const WELLNESS_ITEMS = ["Articles", "Books", "Videos", "Myth Vs Facts", "FAQs"] as const;
+const WELLNESS_ITEMS = ["Articles", "Books", "Awareness", "Videos", "Myth Vs Facts", "FAQs"] as const;
+
+const WELLNESS_ROUTES: Record<typeof WELLNESS_ITEMS[number], string> = {
+  Articles: '/(member)/explore/articles',
+  Books: '/(member)/explore/books',
+  Awareness: '/(member)/explore/awareness',
+  Videos: '/(member)/explore/videos',
+  'Myth Vs Facts': '/(member)/explore/myth-vs-facts',
+  FAQs: '/(member)/explore/faqs',
+};
 
 export function MemberDrawer({ visible, onClose }: MemberDrawerProps) {
   const { width: screenWidth } = useWindowDimensions();
@@ -115,7 +124,10 @@ export function MemberDrawer({ visible, onClose }: MemberDrawerProps) {
                 key={item}
                 activeOpacity={0.6}
                 className="flex-row items-center gap-3 px-2 py-3.5 rounded-xl"
-                onPress={() => { }}
+                onPress={() => {
+                  onClose();
+                  router.push(WELLNESS_ROUTES[item] as any);
+                }}
               >
                 <Text className="text-lg text-gray-900">{item}</Text>
               </TouchableOpacity>

@@ -1,5 +1,5 @@
-import React, { useRef } from "react";
-import { View, Text, Image, ScrollView } from "react-native";
+import React, { useRef, useState } from "react";
+import { View, Text, Image, ScrollView, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
@@ -9,12 +9,17 @@ import { AuthShell } from "@/components/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { signInWithGoogle } from "@/lib/auth";
 import { signUpSchema } from "@/lib/validations/auth";
+import { useAuthStore } from "@/store/authStore";
 import type { SignUpFormData } from "@/types/auth";
 
 const MemberSignUp = () => {
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
+  const setSession = useAuthStore((state) => state.setSession);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState<string | null>(null);
 
   const {
     control,
@@ -49,6 +54,21 @@ const MemberSignUp = () => {
       email: data.email,
     });
     router.push(`/(auth)/member/password?${params.toString()}`);
+  };
+
+  const handleGoogleSignUp = async () => {
+    setIsGoogleLoading(true);
+    setGoogleError(null);
+
+    try {
+      const { session } = await signInWithGoogle({ role: "member" });
+      setSession(session);
+      router.replace("/(member)/(tabs)" as any);
+    } catch (error) {
+      setGoogleError(error instanceof Error ? error.message : "Google sign-up failed.");
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
   return (
@@ -166,11 +186,23 @@ const MemberSignUp = () => {
           <Button
             variant="outline"
             className="w-full rounded-2xl h-14 border-gray-200 bg-white active:bg-white"
+            disabled={isGoogleLoading}
+            onPress={handleGoogleSignUp}
           >
-            <GoogleIcon width={20} height={20} />
-            <Text className="text-black text-xl">Google</Text>
+            {isGoogleLoading ? (
+              <ActivityIndicator color="#111827" />
+            ) : (
+              <>
+                <GoogleIcon width={20} height={20} />
+                <Text className="text-black text-xl">Google</Text>
+              </>
+            )}
           </Button>
         </View>
+
+        {googleError ? (
+          <Text className="text-red-500 text-sm text-center">{googleError}</Text>
+        ) : null}
 
         {/* Footer */}
         <View className="items-center gap-3">

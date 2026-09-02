@@ -9,7 +9,7 @@ import { AuthShell } from "@/components/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { signInClinician } from "@/lib/auth";
+import { signInClinician, signInWithGoogle } from "@/lib/auth";
 import { signInSchema } from "@/lib/validations/auth";
 import { useAuthStore } from "@/store/authStore";
 import type { SignInFormData } from "@/types/auth";
@@ -22,6 +22,7 @@ const ClinicianSignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const {
     control,
@@ -65,6 +66,21 @@ const ClinicianSignIn = () => {
       setLoginError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    setLoginError(null);
+
+    try {
+      const { session, needsClinicianAcknowledgement } = await signInWithGoogle({ role: "clinician" });
+      setSession(session);
+      router.replace((needsClinicianAcknowledgement ? "/(auth)/clinician/success" : "/(clinician)") as any);
+    } catch (error) {
+      setLoginError(error instanceof Error ? error.message : "Google sign-in failed.");
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
@@ -215,12 +231,17 @@ const ClinicianSignIn = () => {
         <Button
           variant="outline"
           className="w-full rounded-2xl h-14 border-gray-200 bg-white"
-          onPress={() => {
-            // Google sign-in remains unimplemented
-          }}
+          disabled={isGoogleLoading}
+          onPress={handleGoogleSignIn}
         >
-          <GoogleIcon width={20} height={20} />
-          <Text className="text-black font-medium">Google</Text>
+          {isGoogleLoading ? (
+            <ActivityIndicator color="#111827" />
+          ) : (
+            <>
+              <GoogleIcon width={20} height={20} />
+              <Text className="text-black font-medium">Google</Text>
+            </>
+          )}
         </Button>
 
         {/* Footer */}

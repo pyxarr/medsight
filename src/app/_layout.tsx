@@ -2,6 +2,7 @@ import "../../global.css";
 import React, { useEffect } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { Stack } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { PortalHost } from "@rn-primitives/portal";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { DevSitemapFab } from "@/components/DevSitemapFab";
@@ -9,6 +10,8 @@ import { DevSitemapFab } from "@/components/DevSitemapFab";
 import QueryProvider from "@/context/QueryProvider";
 import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/store/authStore";
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function RootLayout() {
   const { isLoading, setSession } = useAuthStore();

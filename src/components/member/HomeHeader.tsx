@@ -1,11 +1,13 @@
 import { View, TouchableOpacity } from "react-native";
+import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 
 interface HomeHeaderProps {
   onHamburgerPress: () => void;
+  avatarUrl?: string | null;
 }
 
-export function HomeHeader({ onHamburgerPress }: HomeHeaderProps) {
+export function HomeHeader({ onHamburgerPress, avatarUrl }: HomeHeaderProps) {
   return (
     <View className="flex-row items-center justify-between px-5 pt-2 pb-4">
       <TouchableOpacity
@@ -23,9 +25,18 @@ export function HomeHeader({ onHamburgerPress }: HomeHeaderProps) {
         <Ionicons name="reorder-three" size={20} color="#111827" />
       </TouchableOpacity>
 
-      <View className="w-10 h-10 rounded-full bg-gray-200 items-center justify-center">
-        <Ionicons name="person" size={20} color="#6B7280" />
-      </View>
+      {avatarUrl ? (
+        <Image
+          source={{ uri: avatarUrl }}
+          style={{ width: 40, height: 40, borderRadius: 20 }}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+        />
+      ) : (
+        <View className="w-10 h-10 rounded-full bg-gray-200 items-center justify-center">
+          <Ionicons name="person" size={20} color="#6B7280" />
+        </View>
+      )}
     </View>
   );
 }

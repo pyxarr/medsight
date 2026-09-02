@@ -188,13 +188,6 @@ const handleLogout = async () => {
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity
-            activeOpacity={0.8}
-            className="items-center py-2"
-            onPress={() => Alert.alert("Coming soon", "Delete account will be available once the backend endpoint is ready.")}
-          >
-            <Text className="text-red-500 text-sm">Delete account</Text>
-          </TouchableOpacity>
         </View>
 
         <Dialog open={confirmLogoutVisible} onOpenChange={setConfirmLogoutVisible}>

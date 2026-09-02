@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 const ITEMS = [
   {
@@ -8,24 +9,28 @@ const ITEMS = [
     title: "Articles",
     bg: "#BFDBFE",
     image: null,
+    route: "../explore/articles",
   },
   {
     id: "awareness",
     title: "Awareness",
     bg: "#FCE7F3",
     image: require("@/assets/images/woman.png"),
+    route: "../explore/awareness",
   },
   {
     id: "myth-vs-facts",
     title: "Myth vs Facts",
     bg: "#FEF3C7",
     image: require("@/assets/images/magnifier.png"),
+    route: "../explore/myth-vs-facts",
   },
   {
     id: "faqs",
     title: "FAQs",
     bg: "#F5F5F4",
     image: null,
+    route: "../explore/faqs",
   },
 ];
 
@@ -54,6 +59,7 @@ export function QuickAccess() {
             <TouchableOpacity
               key={item.id}
               activeOpacity={0.8}
+              onPress={() => router.push(item.route as any)}
               style={{
                 width: cardWidth,
                 height: 170,
