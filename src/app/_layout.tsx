@@ -9,6 +9,7 @@ import { DevSitemapFab } from "@/components/DevSitemapFab";
 
 import QueryProvider from "@/context/QueryProvider";
 import { supabase } from "@/lib/supabase";
+import { prefetchAll } from "@/lib/prefetch";
 import { useAuthStore } from "@/store/authStore";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -22,6 +23,9 @@ export default function RootLayout() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         setSession(session);
+        if (session?.access_token) {
+          prefetchAll(session.access_token);
+        }
       } catch (error) {
         console.error("Error hydrating auth session:", error);
         setSession(null);
@@ -33,6 +37,9 @@ export default function RootLayout() {
     // Subscribe to auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session?.access_token) {
+        prefetchAll(session.access_token);
+      }
     });
 
     return () => {
