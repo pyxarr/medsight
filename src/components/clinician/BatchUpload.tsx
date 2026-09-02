@@ -1,19 +1,30 @@
 import { useState } from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  Linking,
+} from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation } from "@tanstack/react-query";
+import { parseValidationErrors } from "@/lib/errors";
 import { submitBatchAssessment } from "@/services/assessmentService";
 import { useAuthStore } from "@/store/authStore";
 import type { BatchAssessmentResponse } from "@/types/assessment";
-import { parseValidationErrors } from "@/lib/errors";
 
 export function BatchUpload() {
   const session = useAuthStore((state) => state.session);
+  const [disclaimerExpanded, setDisclaimerExpanded] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const mutation = useMutation<BatchAssessmentResponse, Error, { uri: string; name: string; mimeType: string }>({
+  const mutation = useMutation<
+    BatchAssessmentResponse,
+    Error,
+    { uri: string; name: string; mimeType: string }
+  >({
     mutationFn: (file) => {
       const accessToken = session?.access_token ?? "";
       return submitBatchAssessment(file, accessToken);
@@ -28,9 +39,9 @@ export function BatchUpload() {
     onError: (error) => {
       if (__DEV__) console.error("Batch upload error:", error);
       setErrorMessage(
-        parseValidationErrors(error.message)
-          || error.message
-          || "Upload failed. Please check your file and try again.",
+        parseValidationErrors(error.message) ||
+          error.message ||
+          "Upload failed. Please check your file and try again."
       );
     },
   });
@@ -52,7 +63,11 @@ export function BatchUpload() {
 
     const fileExtension = selectedAsset.name.split(".").pop()?.toLowerCase();
 
-    if (fileExtension !== "csv" && fileExtension !== "xlsx" && fileExtension !== "xls") {
+    if (
+      fileExtension !== "csv" &&
+      fileExtension !== "xlsx" &&
+      fileExtension !== "xls"
+    ) {
       setErrorMessage("Please select a CSV or Excel file.");
       return;
     }
@@ -62,8 +77,8 @@ export function BatchUpload() {
       fileExtension === "xlsx"
         ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         : fileExtension === "xls"
-          ? "application/vnd.ms-excel"
-          : "text/csv";
+        ? "application/vnd.ms-excel"
+        : "text/csv";
 
     const fileToUpload = {
       uri: selectedAsset.uri,
@@ -88,8 +103,9 @@ export function BatchUpload() {
           Upload batch data (Clinical, Biopsy & Blood models supported)
         </Text>
         <TouchableOpacity
-          className={`flex-row items-center gap-2 px-6 py-3 rounded-md mb-3 ${mutation.isPending ? "bg-blue-400" : "bg-blue-600"
-            }`}
+          className={`flex-row items-center gap-2 px-6 py-3 rounded-md mb-3 ${
+            mutation.isPending ? "bg-blue-400" : "bg-blue-600"
+          }`}
           onPress={handleSelectFile}
           disabled={mutation.isPending}
         >
@@ -102,10 +118,34 @@ export function BatchUpload() {
             {mutation.isPending ? "Uploading..." : "Select CSV or Excel file"}
           </Text>
         </TouchableOpacity>
-        <Text className="text-sm text-gray-400">
-          Download template{" "}
-          <Text className="text-blue-600 underline">here</Text>
-        </Text>
+        <View className="items-center mt-1 gap-1">
+          <Text className="text-sm text-gray-500">
+            Download the batch template
+          </Text>
+          <View className="flex-row items-center gap-3">
+            <TouchableOpacity
+              onPress={() =>
+                Linking.openURL(
+                  "https://hrobsuypwegvwtrcljlv.supabase.co/storage/v1/object/public/templates/medsight_batch_template.csv"
+                )
+              }
+              activeOpacity={0.7}
+            >
+              <Text className="text-sm text-blue-600 underline">CSV</Text>
+            </TouchableOpacity>
+            <Text className="text-sm text-gray-300">|</Text>
+            <TouchableOpacity
+              onPress={() =>
+                Linking.openURL(
+                  "https://hrobsuypwegvwtrcljlv.supabase.co/storage/v1/object/public/templates/medsight_batch_template.xlsx"
+                )
+              }
+              activeOpacity={0.7}
+            >
+              <Text className="text-sm text-blue-600 underline">Excel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
         <Text className="text-xs text-gray-400 mt-8">
           Supported format: CSV or Excel with standard tumour feature columns
         </Text>
@@ -126,10 +166,34 @@ export function BatchUpload() {
           </Text>
           <Text className="text-gray-600">
             it does not provide diagnosis or replace professional medical
-            judgment...
+            judgment.
           </Text>
-          <Text className="text-blue-600"> More</Text>
+          {!disclaimerExpanded && (
+            <Text
+              className="text-blue-600"
+              onPress={() => setDisclaimerExpanded(true)}
+            >
+              {" "}
+              More
+            </Text>
+          )}
         </Text>
+        {disclaimerExpanded && (
+          <Text className="text-sm text-gray-600 mt-2">
+            Results generated by this system are intended to assist qualified
+            clinicians in their decision-making process and must not be used as
+            a standalone basis for diagnosis, treatment, or clinical action.
+            Model predictions are probabilistic and may not reflect the full
+            clinical picture. Always apply professional medical judgement when
+            interpreting outputs.{" "}
+            <Text
+              className="text-blue-600"
+              onPress={() => setDisclaimerExpanded(false)}
+            >
+              Less
+            </Text>
+          </Text>
+        )}
       </View>
     </View>
   );
