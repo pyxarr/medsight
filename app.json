@@ -15,7 +15,8 @@
         "backgroundColor": "#208AEF",
         "foregroundImage": "./assets/images/logo@3x.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.pyxarr.medsight"
     },
     "web": {
       "output": "static",
