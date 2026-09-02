@@ -31,7 +31,7 @@ export default function AuthCallback() {
         router.replace("/onboarding/role-selection");
       }
     });
-  }, []);
+  }, [params.code, router]);
 
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
