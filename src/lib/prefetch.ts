@@ -10,15 +10,17 @@ import { getCurrentUserProfile } from "@/services/userService";
  */
 export async function prefetchCommunityFeeds(token: string): Promise<void> {
   await Promise.all([
-    queryClient.prefetchQuery({
+    queryClient.prefetchInfiniteQuery({
       queryKey: ["community-feed", "foryou"],
       queryFn: () => getFeed(20, 0, token),
       staleTime: 1000 * 60 * 2,
+      initialPageParam: 0,
     }),
-    queryClient.prefetchQuery({
+    queryClient.prefetchInfiniteQuery({
       queryKey: ["community-feed", "following"],
       queryFn: () => getFollowingFeed(20, 0, token),
       staleTime: 1000 * 60 * 2,
+      initialPageParam: 0,
     }),
   ]);
 }
