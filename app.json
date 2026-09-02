@@ -55,6 +55,12 @@
         "projectId": "8fa838f2-5994-4a7f-8cf8-511bdd5c7785"
       }
     },
-    "owner": "pyxarr"
+    "owner": "pyxarr",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/8fa838f2-5994-4a7f-8cf8-511bdd5c7785"
+    }
   }
 }
