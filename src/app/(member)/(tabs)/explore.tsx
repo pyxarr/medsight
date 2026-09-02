@@ -1,10 +1,18 @@
-import { useState } from 'react';
-import { Linking, View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { HomeHeader } from '@/components/member/HomeHeader';
-import { MemberDrawer } from '@/components/member/MemberDrawer';
-import { MemberShell } from '@/components/MemberShell';
+import { useState } from "react";
+import {
+  Linking,
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+} from "react-native";
+import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
+import { HomeHeader } from "@/components/member/HomeHeader";
+import { MemberDrawer } from "@/components/member/MemberDrawer";
+import { MemberShell } from "@/components/MemberShell";
 import {
   ARTICLES,
   BOOKS,
@@ -14,13 +22,21 @@ import {
   Book,
   Video,
   AwarenessPost,
-} from '@/features/explore';
+} from "@/features/explore";
+import { getCurrentUserProfile } from "@/services/userService";
+import { useAuthStore } from "@/store/authStore";
 
 const handleOpenUrl = (url: string) => {
   Linking.openURL(url).catch(() => {});
 };
 
-const SectionHeader = ({ title, onSeeAll }: { title: string; onSeeAll?: () => void }) => (
+const SectionHeader = ({
+  title,
+  onSeeAll,
+}: {
+  title: string;
+  onSeeAll?: () => void;
+}) => (
   <View className="flex-row items-center justify-between px-5 mb-3">
     <Text className="text-lg font-bold text-gray-900">{title}</Text>
     {onSeeAll && (
@@ -31,7 +47,13 @@ const SectionHeader = ({ title, onSeeAll }: { title: string; onSeeAll?: () => vo
   </View>
 );
 
-const ArticleRow = ({ article, handleOpenUrl }: { article: Article; handleOpenUrl: (url: string) => void }) => (
+const ArticleRow = ({
+  article,
+  handleOpenUrl,
+}: {
+  article: Article;
+  handleOpenUrl: (url: string) => void;
+}) => (
   <TouchableOpacity
     key={article.id}
     onPress={() => handleOpenUrl(article.url)}
@@ -39,8 +61,13 @@ const ArticleRow = ({ article, handleOpenUrl }: { article: Article; handleOpenUr
     className="flex-row items-start gap-3 px-5 mb-3"
   >
     <View className="flex-1 min-w-0">
-      <Text className="text-xs text-gray-500 uppercase tracking-wider mb-1">{article.source}</Text>
-      <Text className="text-base font-bold text-gray-900 mb-1" numberOfLines={2}>
+      <Text className="text-xs text-gray-500 uppercase tracking-wider mb-1">
+        {article.source}
+      </Text>
+      <Text
+        className="text-base font-bold text-gray-900 mb-1"
+        numberOfLines={2}
+      >
         {article.title}
       </Text>
       <Text className="text-sm text-gray-600 mb-1" numberOfLines={2}>
@@ -64,7 +91,13 @@ const ArticleRow = ({ article, handleOpenUrl }: { article: Article; handleOpenUr
   </TouchableOpacity>
 );
 
-const FeaturedArticleCard = ({ article, handleOpenUrl }: { article: Article; handleOpenUrl: (url: string) => void }) => (
+const FeaturedArticleCard = ({
+  article,
+  handleOpenUrl,
+}: {
+  article: Article;
+  handleOpenUrl: (url: string) => void;
+}) => (
   <TouchableOpacity
     onPress={() => handleOpenUrl(article.url)}
     activeOpacity={0.8}
@@ -76,7 +109,9 @@ const FeaturedArticleCard = ({ article, handleOpenUrl }: { article: Article; han
       resizeMode="cover"
     />
     <View className="mt-3 gap-1">
-      <Text className="text-xs text-gray-500 uppercase tracking-wider">{article.source}</Text>
+      <Text className="text-xs text-gray-500 uppercase tracking-wider">
+        {article.source}
+      </Text>
       <Text className="text-xl font-bold text-gray-900" numberOfLines={2}>
         {article.title}
       </Text>
@@ -96,7 +131,13 @@ const FeaturedArticleCard = ({ article, handleOpenUrl }: { article: Article; han
   </TouchableOpacity>
 );
 
-const BookCard = ({ book, handleOpenUrl }: { book: Book; handleOpenUrl: (url: string) => void }) => (
+const BookCard = ({
+  book,
+  handleOpenUrl,
+}: {
+  book: Book;
+  handleOpenUrl: (url: string) => void;
+}) => (
   <TouchableOpacity
     key={book.id}
     onPress={() => handleOpenUrl(book.url)}
@@ -109,7 +150,10 @@ const BookCard = ({ book, handleOpenUrl }: { book: Book; handleOpenUrl: (url: st
         className="w-[110px] h-[150px] rounded-lg"
         resizeMode="cover"
       />
-      <Text className="text-sm font-semibold text-gray-900 mt-2" numberOfLines={2}>
+      <Text
+        className="text-sm font-semibold text-gray-900 mt-2"
+        numberOfLines={2}
+      >
         {book.title}
       </Text>
       <Text className="text-xs text-gray-500">{book.author}</Text>
@@ -117,7 +161,13 @@ const BookCard = ({ book, handleOpenUrl }: { book: Book; handleOpenUrl: (url: st
   </TouchableOpacity>
 );
 
-const AwarenessCard = ({ post, handleOpenUrl }: { post: AwarenessPost; handleOpenUrl: (url: string) => void }) => (
+const AwarenessCard = ({
+  post,
+  handleOpenUrl,
+}: {
+  post: AwarenessPost;
+  handleOpenUrl: (url: string) => void;
+}) => (
   <TouchableOpacity
     key={post.id}
     onPress={() => post.url && handleOpenUrl(post.url)}
@@ -135,7 +185,10 @@ const AwarenessCard = ({ post, handleOpenUrl }: { post: AwarenessPost; handleOpe
           {post.tag}
         </Text>
       </View>
-      <Text className="text-base font-bold text-gray-900 mb-1" numberOfLines={2}>
+      <Text
+        className="text-base font-bold text-gray-900 mb-1"
+        numberOfLines={2}
+      >
         {post.title}
       </Text>
       <Text className="text-sm text-gray-600" numberOfLines={2}>
@@ -145,7 +198,13 @@ const AwarenessCard = ({ post, handleOpenUrl }: { post: AwarenessPost; handleOpe
   </TouchableOpacity>
 );
 
-const FeaturedVideoCard = ({ video, handleOpenUrl }: { video: Video; handleOpenUrl: (url: string) => void }) => (
+const FeaturedVideoCard = ({
+  video,
+  handleOpenUrl,
+}: {
+  video: Video;
+  handleOpenUrl: (url: string) => void;
+}) => (
   <TouchableOpacity
     onPress={() => handleOpenUrl(video.url)}
     activeOpacity={0.8}
@@ -162,7 +221,9 @@ const FeaturedVideoCard = ({ video, handleOpenUrl }: { video: Video; handleOpenU
       </View>
     </View>
     <View className="mt-3 gap-1">
-      <Text className="text-xs text-gray-500 uppercase tracking-wider">{video.source}</Text>
+      <Text className="text-xs text-gray-500 uppercase tracking-wider">
+        {video.source}
+      </Text>
       <Text className="text-xl font-bold text-gray-900" numberOfLines={2}>
         {video.title}
       </Text>
@@ -181,26 +242,57 @@ const ExploreTab = () => {
   const featuredVideo = VIDEOS.find((v) => v.isFeatured);
   const awarenessPosts = AWARENESS_POSTS.slice(0, 2);
 
+  const user = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.session?.access_token);
+
+  const { data: profile } = useQuery({
+    queryKey: ["member", "profile", token],
+    queryFn: async () => {
+      if (!token) throw new Error("No authentication token available");
+      return await getCurrentUserProfile(token);
+    },
+    enabled: !!token,
+  });
+
   return (
     <View className="flex-1">
       <MemberShell theme="main" showHeader={false}>
-        <HomeHeader onHamburgerPress={() => setDrawerVisible(true)} />
+        <HomeHeader
+          onHamburgerPress={() => setDrawerVisible(true)}
+          avatarUrl={
+            profile?.avatar_url ??
+            user?.user_metadata?.avatar_url ??
+            user?.user_metadata?.avatar ??
+            null
+          }
+        />
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 30 }}
           keyboardShouldPersistTaps="handled"
         >
           {/* 1. Featured Article */}
-          {featuredArticle && <FeaturedArticleCard article={featuredArticle} handleOpenUrl={handleOpenUrl} />}
+          {featuredArticle && (
+            <FeaturedArticleCard
+              article={featuredArticle}
+              handleOpenUrl={handleOpenUrl}
+            />
+          )}
 
           {/* 2. More Articles */}
           {otherArticles.length > 0 && (
             <>
               <SectionHeader
                 title="More Articles"
-                onSeeAll={() => router.push('../explore/articles')}
+                onSeeAll={() => router.push("../explore/articles")}
               />
-              {otherArticles.map((article) => <ArticleRow key={article.id} article={article} handleOpenUrl={handleOpenUrl} />)}
+              {otherArticles.map((article) => (
+                <ArticleRow
+                  key={article.id}
+                  article={article}
+                  handleOpenUrl={handleOpenUrl}
+                />
+              ))}
             </>
           )}
 
@@ -209,14 +301,23 @@ const ExploreTab = () => {
             <>
               <SectionHeader
                 title="Books"
-                onSeeAll={() => router.push('../explore/books')}
+                onSeeAll={() => router.push("../explore/books")}
               />
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 5, paddingRight: 5 }}
+                contentContainerStyle={{
+                  paddingHorizontal: 5,
+                  paddingRight: 5,
+                }}
               >
-                {BOOKS.map((book) => <BookCard key={book.id} book={book} handleOpenUrl={handleOpenUrl} />)}
+                {BOOKS.map((book) => (
+                  <BookCard
+                    key={book.id}
+                    book={book}
+                    handleOpenUrl={handleOpenUrl}
+                  />
+                ))}
               </ScrollView>
             </>
           )}
@@ -226,9 +327,15 @@ const ExploreTab = () => {
             <>
               <SectionHeader
                 title="Awareness"
-                onSeeAll={() => router.push('../explore/awareness')}
+                onSeeAll={() => router.push("../explore/awareness")}
               />
-              {awarenessPosts.map((post) => <AwarenessCard key={post.id} post={post} handleOpenUrl={handleOpenUrl} />)}
+              {awarenessPosts.map((post) => (
+                <AwarenessCard
+                  key={post.id}
+                  post={post}
+                  handleOpenUrl={handleOpenUrl}
+                />
+              ))}
             </>
           )}
 
@@ -237,9 +344,12 @@ const ExploreTab = () => {
             <>
               <SectionHeader
                 title="Videos"
-                onSeeAll={() => router.push('../explore/videos')}
+                onSeeAll={() => router.push("../explore/videos")}
               />
-              <FeaturedVideoCard video={featuredVideo} handleOpenUrl={handleOpenUrl} />
+              <FeaturedVideoCard
+                video={featuredVideo}
+                handleOpenUrl={handleOpenUrl}
+              />
             </>
           )}
         </ScrollView>
