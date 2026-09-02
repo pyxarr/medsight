@@ -68,7 +68,7 @@ export default function RoleSelection() {
               </Text>
               <View className="mt-2 flex-row items-center justify-center">
                 <Pressable
-                  className="bg-[#2D5BE3] rounded-lg py-3 px-6 items-center"
+                  className="bg-[#DB2777] rounded-lg py-3 px-6 items-center"
                   onPress={() => router.replace("/(auth)/member/sign-in")}
                 >
                   <View className="flex-row items-center">
@@ -99,7 +99,7 @@ export default function RoleSelection() {
               </Text>
               <View className="mt-2 flex-row items-center justify-center">
                 <Pressable
-                  className="mt-1 bg-[#DB2777] rounded-lg py-3 px-6 items-center"
+                  className="mt-1 bg-[#2D5BE3] rounded-lg py-3 px-6 items-center"
                   onPress={() => router.replace("/(auth)/clinician/sign-in")}
                 >
                   <View className="flex-row items-center">
